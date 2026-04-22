@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class WalletServiceImpl implements WalletService {
@@ -106,6 +107,9 @@ public class WalletServiceImpl implements WalletService {
     @Transactional
     public String sendMoney(SendMoneyRequest req) {
 
+        log.info("sendMoney START senderId={} receiverId={} amount={}",
+                req.getSenderId(), req.getReceiverId(), req.getAmount());
+
         // ❌ Prevent self transfer
         if (req.getSenderId().equals(req.getReceiverId())) {
             throw new WalletException("Sender and receiver cannot be same");
@@ -115,13 +119,45 @@ public class WalletServiceImpl implements WalletService {
         String referenceId = IdGenerator.generateTxnId();
 
         try{
-            // 🔒 Lock sender wallet (prevents concurrent modification)
-            Wallet sender = walletRepo.findByUserIdForUpdate(req.getSenderId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
 
-            // 🔒 Lock receiver wallet
-            Wallet receiver = walletRepo.findByUserIdForUpdate(req.getReceiverId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Receiver not found"));
+            // 🔒 Deadlock prevention — always lock in sorted order
+            /*
+            * Scenario: User A sends ₹500 to User B, aur same time pe User B sends ₹200 to User A.
+            * ❌ Without Fix — Deadlock Hoga
+            * Thread 1 (A→B):                Thread 2 (B→A):
+                Lock Wallet A 🔒               Lock Wallet B 🔒
+                    |                               |
+                    | Lock Wallet B chahiye...      | Lock Wallet A chahiye...
+                    | ⏳ B locked hai, wait karo   | ⏳ A locked hai, wait karo
+                    |                               |
+                    forever wait...            forever wait... 💀
+            *
+            * ✅ With Fix — Sorted Order
+            *   Rule: Hamesha alphabetical order mein lock karo.
+                A < B, toh pehle A lock karo, phir B — chahe sender kaun bhi ho.
+                * Thread 1 (A→B):                Thread 2 (B→A):
+                Lock Wallet A 🔒               Lock Wallet A chahiye...
+                Lock Wallet B 🔒               ⏳ A already locked, wait karo
+                Complete ✅
+                Release A, B 🔓
+                                               Lock Wallet A 🔒
+                                               Lock Wallet B 🔒
+                                               Complete ✅
+             */
+            List<String> orderedIds = List.of(req.getSenderId(), req.getReceiverId())
+                    .stream()
+                    .sorted()
+                    .toList();
+
+            Wallet firstLocked  = walletRepo.findByUserIdForUpdate(orderedIds.get(0))
+                    .orElseThrow(() -> new ResourceNotFoundException("Wallet not found: " + orderedIds.getFirst()));
+            Wallet secondLocked = walletRepo.findByUserIdForUpdate(orderedIds.get(1))
+                    .orElseThrow(() -> new ResourceNotFoundException("Wallet not found: " + orderedIds.get(1)));
+
+            // Sort ke baad pata nahi kaun sender hai kaun receiver — map back karo
+            Wallet sender   = firstLocked.getUserId().equals(req.getSenderId()) ? firstLocked : secondLocked;
+            Wallet receiver = firstLocked.getUserId().equals(req.getReceiverId()) ? firstLocked : secondLocked;
+
 
             // ❌ Check sufficient balance
             if (sender.getBalance().compareTo(req.getAmount()) < 0) {
@@ -139,41 +175,33 @@ public class WalletServiceImpl implements WalletService {
             walletRepo.save(receiver);
 
 
-            // 🧾 Log debit transaction
-            txnService.saveTransaction(
-                    referenceId + "-D",
-                    sender.getUserId(),
-                    receiver.getUserId(),
-                    req.getAmount(),
-                    "DEBIT",
-                    "Sent to user " + receiver.getUserId(),
-                    "SUCCESS"
+            // 🧾 Debit log — sender ke liye
+            auditService.logTransaction(
+                    referenceId + "-D", sender.getUserId(), receiver.getUserId(),
+                    req.getAmount(), TransactionType.DEBIT,
+                    "Sent to user " + receiver.getUserId(), TransactionStatus.SUCCESS
             );
 
-            // 🧾 Log credit transaction
-            txnService.saveTransaction(
-                    referenceId + "-C",
-                    sender.getUserId(),
-                    receiver.getUserId(),
-                    req.getAmount(),
-                    "CREDIT",
-                    "Received from user " + sender.getUserId(),
-                    "SUCCESS"
+            // 🧾 Credit log — receiver ke liye
+            auditService.logTransaction(
+                    referenceId + "-C", sender.getUserId(), receiver.getUserId(),
+                    req.getAmount(), TransactionType.CREDIT,
+                    "Received from user " + sender.getUserId(), TransactionStatus.SUCCESS
             );
 
-            // ✅ Return txnId for tracking
+            log.info("sendMoney SUCCESS referenceId={} sender={} receiver={} amount={}",
+                    referenceId, req.getSenderId(), req.getReceiverId(), req.getAmount());
             return referenceId;
         } catch (Exception e) {
+            log.error("sendMoney FAILED sender={} receiver={} error={}", req.getSenderId(), req.getReceiverId(), e.getMessage());
 
-            txnService.saveTransaction(
-                    referenceId,
-                    req.getSenderId(),
-                    req.getReceiverId(),
-                    req.getAmount(),
-                    "DEBIT",
-                    e.getMessage(),
-                    "FAILED"
+            // 🧾 FAILED log — REQUIRES_NEW se alag transaction mein save hoga
+            auditService.logTransaction(
+                    referenceId, req.getSenderId(), req.getReceiverId(),
+                    req.getAmount(), TransactionType.DEBIT,
+                    e.getMessage(), TransactionStatus.FAILED
             );
+
             throw e;
         }
     }
