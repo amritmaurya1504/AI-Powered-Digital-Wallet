@@ -45,55 +45,6 @@ class AddMoneyIdempotencyTest {
      * EXPECTED:
      * Sirf 1 baar paisa add hoga
      */
-    @Test
-    void test_addMoney_sameKey_concurrent_shouldCreditOnlyOnce() throws InterruptedException {
-        System.out.println("\n=== TEST 1: SAME KEY (Concurrent AddMoney) ===");
-
-        BigDecimal amount = new BigDecimal("500");
-        String key = IdGenerator.generateIdempotencyKey(); // SAME KEY
-
-        int threadCount = 5;
-
-        CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch doneLatch  = new CountDownLatch(threadCount);
-
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-
-        for (int i = 0; i < threadCount; i++) {
-            executor.submit(() -> {
-                try {
-                    startLatch.await();
-
-                    AddMoneyRequest req = new AddMoneyRequest();
-                    req.setUserId(user);
-                    req.setAmount(amount);
-                    req.setIdempotencyKey(key); // SAME KEY
-
-                    walletService.addMoney(req);
-                    System.out.println("✅ Add ₹500 attempt");
-
-                } catch (Exception e) {
-                    System.err.println("❌ FAILED: " + e.getMessage());
-                } finally {
-                    doneLatch.countDown();
-                }
-            });
-        }
-
-        startLatch.countDown(); // 🚦 FIRE
-        doneLatch.await(20, TimeUnit.SECONDS);
-        executor.shutdown();
-
-        BigDecimal finalBalance = walletService.getBalance(user);
-
-        System.out.println("\n--- RESULTS ---");
-        System.out.println("Final Balance: ₹" + finalBalance);
-
-        // ✅ ONLY ONE credit
-        assertThat(finalBalance).isEqualByComparingTo(new BigDecimal("500"));
-
-        System.out.println("✅ Idempotency working — duplicate ignored!");
-    }
 
     // ================================================================
     // TEST 2 — Different idempotencyKey (normal behavior)

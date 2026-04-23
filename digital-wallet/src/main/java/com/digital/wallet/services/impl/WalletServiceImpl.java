@@ -11,11 +11,8 @@ import com.digital.wallet.exceptions.ResourceNotFoundException;
 import com.digital.wallet.exceptions.WalletException;
 import com.digital.wallet.repositories.TransactionRepo;
 import com.digital.wallet.repositories.WalletRepo;
-import com.digital.wallet.services.IdempotencyService;
-import com.digital.wallet.services.TransactionService;
 import com.digital.wallet.services.WalletService;
 import com.digital.wallet.utils.IdGenerator;
-import com.digital.wallet.utils.Utility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -32,14 +29,12 @@ public class WalletServiceImpl implements WalletService {
     private final AuditService auditService;
     private final WalletRepo walletRepo;
     private final TransactionRepo transactionRepo;
-    private final IdempotencyService idempotencyService;
 
     public WalletServiceImpl(WalletRepo walletRepo, AuditService auditService,
-                             TransactionRepo transactionRepo, IdempotencyService idempotencyService) {
+                             TransactionRepo transactionRepo) {
         this.walletRepo = walletRepo;
         this.auditService = auditService;
         this.transactionRepo = transactionRepo;
-        this.idempotencyService = idempotencyService;
     }
 
     @Override
@@ -65,21 +60,13 @@ public class WalletServiceImpl implements WalletService {
         log.info("addMoney START userId={} amount={} requestId={}", req.getUserId(), req.getAmount(),
                 req.getIdempotencyKey());
 
-        // 🔥 STEP 1: Try to register idempotency key
-        boolean isNewRequest = idempotencyService.tryCreate(req.getIdempotencyKey());
-
-        if (!isNewRequest) {
-            // Duplicate request
-            Transaction existingTxn = transactionRepo
-                    .findByIdempotencyKey(req.getIdempotencyKey())
-                    .orElseThrow(() -> new RuntimeException("Txn should exist"));
-
-            log.warn("Duplicate addMoney request! returning txnId={}", existingTxn.getId());
-            return existingTxn.getId();
-        }
-
-        // 🔥 Only ONE thread will reach here
-        return processAddMoney(req);
+        return transactionRepo.findByIdempotencyKey(req.getIdempotencyKey())
+                .map(existingTxn -> {
+                    log.warn("Duplicate AddMoney request! requestId={} returning existing referenceId={}",
+                            req.getIdempotencyKey(), existingTxn.getId());
+                    return existingTxn.getId();
+                })
+                .orElseGet(() -> processAddMoney(req));
 
     }
 
@@ -101,8 +88,6 @@ public class WalletServiceImpl implements WalletService {
             // Hibernate dirty checking automatically save karega — but explicit rakhna okay hai clarity ke liye
             walletRepo.save(wallet);
 
-            idempotencyService.markSuccess(req.getIdempotencyKey(), txnId);
-
             // 🧾 Save CREDIT transaction
             auditService.logTransaction(
                     txnId, null, wallet.getUserId(),
@@ -110,8 +95,6 @@ public class WalletServiceImpl implements WalletService {
                     "Added Money to wallet", TransactionStatus.SUCCESS,
                     req.getIdempotencyKey()
             );
-
-
 
             log.info("addMoney SUCCESS txnId={} userId={} amount={}", txnId, req.getUserId(), req.getAmount());
 
@@ -126,8 +109,6 @@ public class WalletServiceImpl implements WalletService {
              * Main transaction rollback ho → wallet update cancel
              * Audit transaction commit ho → FAILED log save rehti hai ✅
              */
-
-            idempotencyService.markFailed(req.getIdempotencyKey(), txnId);
 
             auditService.logTransaction(
                     txnId, null, req.getUserId(),
