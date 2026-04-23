@@ -1,0 +1,282 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #30302e;
+  color: #e2e8f0;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 200px;
+  background: #30302e;
+  border-right: 1px solid #4e4e4e;
+  padding: 1.25rem 0.625rem;
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding: 1.75rem 2rem;
+  margin-left: 200px;
+  overflow-y: auto;
+}
+
+/* ── Stat Cards ── */
+.stat-card {
+  background: #262624;
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  transition: border-color 0.2s;
+}
+.stat-card2 {
+  background: #30302e;
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid #4e4e4e;
+  transition: border-color 0.2s;
+}
+
+.stat-card:hover {
+  border-color: #2a3a52;
+}
+
+/* ── Transaction Items ── */
+.transaction-item {
+  background: transparent;
+  border-radius: 8px;
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid #4e4e4e;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.15s;
+  cursor: pointer;
+  margin-bottom: 0.6rem;
+}
+
+
+/* ── Avatar ── */
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: white;
+  flex-shrink: 0;
+}
+
+/* ── Nav Items ── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+  color: #8c8b84;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.nav-item:hover {
+  background: #262624;
+  color: #dededa;
+}
+
+.nav-item.active {
+  background: #262624;
+  color: #dededa;
+  font-weight: 600;
+}
+
+/* ── Buttons ── */
+.btn {
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13.5px;
+  transition: all 0.15s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary {
+  background: #1e3a5f;
+  color: #93c5fd;
+  border: 1px solid #2d5a8e;
+}
+
+.btn-primary:hover {
+  background: #1e4a7a;
+  border-color: #3b7fc4;
+}
+
+.btn-secondary {
+  background: #1c2a3a;
+  color: #94a3b8;
+  border: 1px solid #243040;
+}
+
+.btn-secondary:hover {
+  background: #222f42;
+  color: #cbd5e1;
+  border-color: #2d3a52;
+}
+
+/* ── Input Fields ── */
+.input-field {
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  border-radius: 8px;
+  border: 1px solid #4e4e4e;
+  background: #262624;
+  color: #fbfbfb;
+  font-size: 0.9375rem;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #3b7fc4;
+  background: #111827;
+}
+
+.input-field::placeholder {
+  color: #565656;
+}
+
+/* ── Badges ── */
+.badge {
+  padding: 0.15rem 0.55rem;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.badge-success {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.badge-failed {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+/* ── Chart Bars ── */
+.chart-bar {
+  background: #1e2f48;
+  border-radius: 4px 4px 0 0;
+  transition: all 0.2s;
+  cursor: pointer;
+  min-height: 4px;
+}
+
+.chart-bar:hover { background: #2a4060; }
+
+.chart-bar.chart-bar-highlight {
+  background: linear-gradient(180deg, #3b82f6, #1d4ed8);
+}
+
+.chart-bar.chart-bar-highlight:hover {
+  background: linear-gradient(180deg, #60a5fa, #2563eb);
+}
+
+/* ── Amount colors ── */
+.text-income {
+  color: #4ade80;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+}
+
+.text-expense {
+  color: #f87171;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+}
+
+.text-balance {
+  color: #4ade80;
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── Quick Action Cards ── */
+.qa-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+
+.qa-card-primary {
+  background: #1e3a5f;
+  border-color: #2d5a8e;
+  color: #93c5fd;
+}
+
+.qa-card-primary:hover {
+  background: #1e4a7a;
+  border-color: #3b7fc4;
+}
+
+.qa-card-secondary {
+  background: #1c2a3a;
+  border-color: #243040;
+  color: #94a3b8;
+}
+
+.qa-card-secondary:hover {
+  background: #222f42;
+  border-color: #2d3a52;
+  color: #cbd5e1;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1e2736; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2a3a52; }
