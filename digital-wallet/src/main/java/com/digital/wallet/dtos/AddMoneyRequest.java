@@ -21,4 +21,12 @@ public class AddMoneyRequest {
 
     @NotNull(message = "User ID is required")
     private String userId;
+
+    /**
+     * Idempotency key — same as AddMoneyRequest.
+     * Ek transaction ek hi baar process honi chahiye, chahe client
+     * kitni baar bhi retry kare.
+     */
+    @NotNull(message = "Idempotency key cannot be null")
+    private String idempotencyKey;
 }

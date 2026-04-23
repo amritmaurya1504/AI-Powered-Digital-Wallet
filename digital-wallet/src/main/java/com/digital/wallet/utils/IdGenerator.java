@@ -11,4 +11,8 @@ public class IdGenerator {
     public static String generateWalletId() {
         return "WAL-" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
     }
+
+    public static String generateIdempotencyKey() {
+        return "IDk-" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+    }
 }

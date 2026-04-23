@@ -3,6 +3,7 @@ package com.digital.wallet;
 import com.digital.wallet.dtos.AddMoneyRequest;
 import com.digital.wallet.dtos.SendMoneyRequest;
 import com.digital.wallet.services.WalletService;
+import com.digital.wallet.utils.IdGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,7 @@ class ZeroBalanceBoundaryTest {
         AddMoneyRequest req = new AddMoneyRequest();
         req.setUserId(userId);
         req.setAmount(new BigDecimal(amount));
+        req.setIdempotencyKey(IdGenerator.generateIdempotencyKey());
         walletService.addMoney(req);
     }
 
