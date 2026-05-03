@@ -70,10 +70,9 @@ public class AuditService {
             BigDecimal amount,
             TransactionType type,
             String note,
-            TransactionStatus status,
-            String idempotencyKey
+            TransactionStatus status
     ) {
         txnService.saveTransaction(txnId, senderId, receiverId, amount,
-                type.name(), note, status.name(), idempotencyKey);
+                type.name(), note, status.name());
     }
 }

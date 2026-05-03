@@ -20,7 +20,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public void saveTransaction(String txnId, String senderId, String receiverId, BigDecimal amount, String type,
-                                String note, String status, String idempotencyKey) {
+                                String note, String status) {
         Transaction txn = new Transaction();
         txn.setId(txnId);
         txn.setSenderId(senderId);
@@ -29,7 +29,6 @@ public class TransactionServiceImpl implements TransactionService {
         txn.setType(type);
         txn.setStatus(status);
         txn.setNote(note);
-        txn.setIdempotencyKey(idempotencyKey);
 
         txnRepo.save(txn);
     }
