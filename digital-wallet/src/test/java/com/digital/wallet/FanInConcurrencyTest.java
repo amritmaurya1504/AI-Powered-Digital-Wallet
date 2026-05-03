@@ -166,7 +166,7 @@ class FanInConcurrencyTest {
         System.out.println("✅ Money conserved! No race condition.");
     }
 
-    // ================================================================
+    // ===============================================  =================
     // TEST 2 — Ek sender ke paas kam balance, baaki theek hain
     // ================================================================
     /**
