@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 public interface WalletService {
 
     Wallet createWallet(String userId);
-    String addMoney(AddMoneyRequest req);
+    String addMoney(AddMoneyRequest req, String idempotencyKey);
     String sendMoney(SendMoneyRequest req);
     Wallet getWalletByUserId(String userId);
     BigDecimal getBalance(String userId);

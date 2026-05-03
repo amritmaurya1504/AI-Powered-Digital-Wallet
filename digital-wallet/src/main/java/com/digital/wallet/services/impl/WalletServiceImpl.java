@@ -1,6 +1,7 @@
 package com.digital.wallet.services.impl;
 
 import com.digital.wallet.dtos.AddMoneyRequest;
+import com.digital.wallet.dtos.IdempotencyRecord;
 import com.digital.wallet.dtos.SendMoneyRequest;
 import com.digital.wallet.entities.Transaction;
 import com.digital.wallet.entities.Wallet;
@@ -27,14 +28,16 @@ public class WalletServiceImpl implements WalletService {
     private static final Logger log = LoggerFactory.getLogger(WalletServiceImpl.class);
 
     private final AuditService auditService;
+    private final IdempotencyService idempotencyService;
     private final WalletRepo walletRepo;
     private final TransactionRepo transactionRepo;
 
     public WalletServiceImpl(WalletRepo walletRepo, AuditService auditService,
-                             TransactionRepo transactionRepo) {
+                             TransactionRepo transactionRepo, IdempotencyService idempotencyService) {
         this.walletRepo = walletRepo;
         this.auditService = auditService;
         this.transactionRepo = transactionRepo;
+        this.idempotencyService = idempotencyService;
     }
 
     @Override
@@ -56,8 +59,11 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     @Transactional // 🔥 Ensures atomic transaction (all DB ops succeed or rollback)
-    public String addMoney(AddMoneyRequest req) {
+    public String addMoney(AddMoneyRequest req, String idempotencyKey) {
         log.info("addMoney START userId={} amount={} requestId={}", req.getUserId(), req.getAmount());
+
+        // ✅ Step 1: Cache check
+        IdempotencyRecord existing = idempotencyService.getRecord(idempotencyKey);
 
         return processAddMoney(req);
 

@@ -47,7 +47,7 @@ class AdvancedConcurrencyTest {
         AddMoneyRequest req = new AddMoneyRequest();
         req.setUserId(userId);
         req.setAmount(new BigDecimal(amount));
-        walletService.addMoney(req);
+        walletService.addMoney(req, IdGenerator.generateIdempotencyKey());
     }
 
     // ================================================================

@@ -31,8 +31,10 @@ public class WalletController {
 
     // 💰 Add Money
     @PostMapping("/add-money")
-    public ResponseEntity<ApiResponse<String>> addMoney(@RequestBody AddMoneyRequest req) {
-        String txnId = walletService.addMoney(req);
+    public ResponseEntity<ApiResponse<String>> addMoney(@RequestBody AddMoneyRequest req,
+                                                        @RequestHeader(value = "Idempotency-Key", required = false)
+                                                        String key) {
+        String txnId = walletService.addMoney(req, key);
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "Amount added successfully", txnId)
         );

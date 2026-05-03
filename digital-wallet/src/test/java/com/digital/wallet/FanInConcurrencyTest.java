@@ -79,7 +79,7 @@ class FanInConcurrencyTest {
         AddMoneyRequest req = new AddMoneyRequest();
         req.setUserId(userId);
         req.setAmount(new BigDecimal(amount));
-        walletService.addMoney(req);
+        walletService.addMoney(req, IdGenerator.generateIdempotencyKey());
         log.info("Add Balance Exit");
     }
 
