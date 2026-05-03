@@ -7,6 +7,8 @@ import com.digital.wallet.utils.IdGenerator;
 import org.hibernate.validator.constraints.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -21,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 class FanInConcurrencyTest {
+
+    Logger log = LoggerFactory.getLogger(FanInConcurrencyTest.class);
 
     @Autowired
     private WalletService walletService;
@@ -71,11 +75,12 @@ class FanInConcurrencyTest {
 
     // Helper method — balance add karna
     private void addBalance(String userId, String amount) {
+        log.info("Add Balance Start");
         AddMoneyRequest req = new AddMoneyRequest();
         req.setUserId(userId);
         req.setAmount(new BigDecimal(amount));
-        req.setIdempotencyKey(IdGenerator.generateIdempotencyKey());
         walletService.addMoney(req);
+        log.info("Add Balance Exit");
     }
 
     // ================================================================

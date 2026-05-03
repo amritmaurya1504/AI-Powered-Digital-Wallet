@@ -14,8 +14,7 @@ public interface TransactionService {
                          BigDecimal amount,
                          String type,
                          String note,
-                         String status,
-                         String idempotencyKey);
+                         String status);
 
     // 📜 Get all transactions of user
     List<Transaction> getUserTransactions(String userId);

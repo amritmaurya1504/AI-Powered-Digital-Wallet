@@ -38,7 +38,4 @@ public class Transaction {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
-
-    @Column(unique = true)
-    private String idempotencyKey;
 }

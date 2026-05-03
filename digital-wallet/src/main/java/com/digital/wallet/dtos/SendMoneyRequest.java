@@ -25,19 +25,5 @@ public class SendMoneyRequest {
     @DecimalMin(value = "1.0", message = "Amount must be greater than 0")
     private BigDecimal amount;
 
-    /**
-     * IDEMPOTENCY KEY — yeh naya field hai
-     *
-     * Problem: Client ne request bheji, network timeout hua.
-     * Client ne dobara bheji — ab paisa TWICE add ho gaya!
-     *
-     * Fix: Client ek unique requestId generate kare (UUID).
-     * Agar same requestId dobara aaye → hum DB check karein → already done → skip.
-     *
-     * Real world mein: Razorpay, Stripe — sab idempotency keys use karte hain.
-     */
-    @NotBlank(message = "Idempotency key ID cannot be blank")
-    private String idempotencyKey; // client generates this UUID — e.g. UUID.randomUUID()
-
     private String note;
 }

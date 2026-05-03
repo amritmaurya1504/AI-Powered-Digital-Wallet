@@ -42,7 +42,6 @@ class ZeroBalanceBoundaryTest {
         AddMoneyRequest req = new AddMoneyRequest();
         req.setUserId(userId);
         req.setAmount(new BigDecimal(amount));
-        req.setIdempotencyKey(IdGenerator.generateIdempotencyKey());
         walletService.addMoney(req);
     }
 

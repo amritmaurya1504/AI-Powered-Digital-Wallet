@@ -57,16 +57,9 @@ public class WalletServiceImpl implements WalletService {
     @Override
     @Transactional // 🔥 Ensures atomic transaction (all DB ops succeed or rollback)
     public String addMoney(AddMoneyRequest req) {
-        log.info("addMoney START userId={} amount={} requestId={}", req.getUserId(), req.getAmount(),
-                req.getIdempotencyKey());
+        log.info("addMoney START userId={} amount={} requestId={}", req.getUserId(), req.getAmount());
 
-        return transactionRepo.findByIdempotencyKey(req.getIdempotencyKey())
-                .map(existingTxn -> {
-                    log.warn("Duplicate AddMoney request! requestId={} returning existing referenceId={}",
-                            req.getIdempotencyKey(), existingTxn.getId());
-                    return existingTxn.getId();
-                })
-                .orElseGet(() -> processAddMoney(req));
+        return processAddMoney(req);
 
     }
 
@@ -92,8 +85,7 @@ public class WalletServiceImpl implements WalletService {
             auditService.logTransaction(
                     txnId, null, wallet.getUserId(),
                     req.getAmount(), TransactionType.CREDIT,
-                    "Added Money to wallet", TransactionStatus.SUCCESS,
-                    req.getIdempotencyKey()
+                    "Added Money to wallet", TransactionStatus.SUCCESS
             );
 
             log.info("addMoney SUCCESS txnId={} userId={} amount={}", txnId, req.getUserId(), req.getAmount());
@@ -113,8 +105,7 @@ public class WalletServiceImpl implements WalletService {
             auditService.logTransaction(
                     txnId, null, req.getUserId(),
                     req.getAmount(), TransactionType.CREDIT,
-                   "Transaction Failed", TransactionStatus.FAILED,
-                    req.getIdempotencyKey()
+                   "Transaction Failed", TransactionStatus.FAILED
             );
 
             throw e;
@@ -126,29 +117,13 @@ public class WalletServiceImpl implements WalletService {
     public String sendMoney(SendMoneyRequest req) {
 
         log.info("sendMoney START senderId={} receiverId={} amount={} requestId={}",
-                req.getSenderId(), req.getReceiverId(), req.getAmount(), req.getIdempotencyKey());
+                req.getSenderId(), req.getReceiverId(), req.getAmount());
 
         if (req.getSenderId().equals(req.getReceiverId())) {
             throw new WalletException("Sender and receiver cannot be same");
         }
 
-        /**
-         * ✅ Idempotency check — same pattern as addMoney
-         *
-         * Same requestId dobara aaye → same referenceId return karo
-         * Wallet dobara touch nahi hoga
-         */
-        return transactionRepo.findByIdempotencyKey(req.getIdempotencyKey())
-                .map(existingTxn -> {
-                    log.warn("Duplicate sendMoney request! requestId={} returning existing referenceId={}",
-                            req.getIdempotencyKey(), existingTxn.getId());
-                    // txnId mein "-D" suffix tha — hata ke base referenceId return karo
-                    String existingId = existingTxn.getId();
-                    return existingId.endsWith("-D")
-                            ? existingId.substring(0, existingId.length() - 2)
-                            : existingId;
-                })
-                .orElseGet(() -> processSendMoney(req));
+        return processSendMoney(req);
 
     }
 
@@ -220,16 +195,14 @@ public class WalletServiceImpl implements WalletService {
             auditService.logTransaction(
                     referenceId + "-D", sender.getUserId(), receiver.getUserId(),
                     req.getAmount(), TransactionType.DEBIT,
-                    "Sent to user " + receiver.getUserId(), TransactionStatus.SUCCESS,
-                    req.getIdempotencyKey()
+                    "Sent to user " + receiver.getUserId(), TransactionStatus.SUCCESS
             );
 
             // 🧾 Credit log — receiver ke liye
             auditService.logTransaction(
                     referenceId + "-C", sender.getUserId(), receiver.getUserId(),
                     req.getAmount(), TransactionType.CREDIT,
-                    "Received from user " + sender.getUserId(), TransactionStatus.SUCCESS,
-                    req.getIdempotencyKey()
+                    "Received from user " + sender.getUserId(), TransactionStatus.SUCCESS
             );
 
             log.info("sendMoney SUCCESS referenceId={} sender={} receiver={} amount={}",
@@ -242,8 +215,7 @@ public class WalletServiceImpl implements WalletService {
             auditService.logTransaction(
                     referenceId, req.getSenderId(), req.getReceiverId(),
                     req.getAmount(), TransactionType.DEBIT,
-                    "Transaction Failed", TransactionStatus.FAILED,
-                    req.getIdempotencyKey()
+                    "Transaction Failed", TransactionStatus.FAILED
             );
 
             throw e;
