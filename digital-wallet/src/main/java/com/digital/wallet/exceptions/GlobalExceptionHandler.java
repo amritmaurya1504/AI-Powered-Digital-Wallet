@@ -18,6 +18,14 @@ public class GlobalExceptionHandler {
         );
     }
 
+    // 🔴 Conflict Exception
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiResponse> handleConflictException(ConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new ApiResponse(false, ex.getMessage(), null)
+        );
+    }
+
     // 🔴 Resource Not Found
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleNotFound(ResourceNotFoundException ex) {

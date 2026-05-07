@@ -67,36 +67,38 @@ public class IdempotencyService {
     // ============================================================
     // STEP 2: MARK AS PROCESSING (LOCK ACQUIRE)
     // ============================================================
-    public void markAsProcessing(String idempotencyKey) {
+    public boolean markAsProcessing(String idempotencyKey) {
 
         // Create a record with PROCESSING status
         IdempotencyRecord record = IdempotencyRecord.builder()
                 .key(idempotencyKey)
                 .status("PROCESSING")
-                .responseBody(null) // abhi response nahi bana
+                .txnId(null) // abhi response nahi bana
                 .build();
 
         // Store in Redis WITHOUT TTL
         // ⚠️ Ye ek placeholder + lock ka kaam karega
-        redisTemplate.opsForValue().set(
+        Boolean acquired = redisTemplate.opsForValue().setIfAbsent(
                 buildCacheKey(idempotencyKey),
                 toJson(record),
                 Duration.ofMinutes(2)
         );
 
         log.info("[IDEMPOTENCY] Marked as PROCESSING, key={}", idempotencyKey);
+
+        return Boolean.TRUE.equals(acquired); // null-safe return
     }
 
     // ============================================================
     // STEP 3: MARK AS COMPLETED (FINAL SUCCESS + CACHE)
     // ============================================================
-    public void markAsCompleted(String idempotencyKey, Object responseBody) {
+    public void markAsCompleted(String idempotencyKey, String txnId) {
 
         // Create final record with full response
         IdempotencyRecord record = IdempotencyRecord.builder()
                 .key(idempotencyKey)
                 .status("COMPLETED")
-                .responseBody(responseBody) // 🔥 FULL RESPONSE STORE
+                .txnId(txnId) // 🔥 FULL RESPONSE STORE
                 .build();
 
         // Store in Redis WITH TTL (24 hours)

@@ -7,6 +7,7 @@ import com.digital.wallet.entities.Transaction;
 import com.digital.wallet.entities.Wallet;
 import com.digital.wallet.enums.TransactionStatus;
 import com.digital.wallet.enums.TransactionType;
+import com.digital.wallet.exceptions.ConflictException;
 import com.digital.wallet.exceptions.InsufficientBalanceException;
 import com.digital.wallet.exceptions.ResourceNotFoundException;
 import com.digital.wallet.exceptions.WalletException;
@@ -65,11 +66,33 @@ public class WalletServiceImpl implements WalletService {
         // ✅ Step 1: Cache check
         IdempotencyRecord existing = idempotencyService.getRecord(idempotencyKey);
 
-        return processAddMoney(req);
+        if(existing != null){
+            if ("COMPLETED".equals(existing.getStatus())) {
+                // Cache hit — wahi purana response return karo
+                log.info("[IDEMPOTENCY] Cache hit, returning stored response, key={}", idempotencyKey);
+                return existing.getTxnId();
+            }
+
+            if ("PROCESSING".equals(existing.getStatus())) {
+                // Duplicate concurrent request
+                throw new ConflictException("Request already in progress for key: " + idempotencyKey);
+            }
+        }
+
+        // ✅ Step 2: PROCESSING mark karo — lock lo
+        boolean lockAcquired = idempotencyService.markAsProcessing(idempotencyKey);
+
+        if(!lockAcquired){
+            // Koi aur thread pehle se processing kar raha hai
+            throw new ConflictException("Request already in progress for key: " + idempotencyKey);
+        }
+
+        // ✅ Step 3: Actual wallet logic
+        return processAddMoney(req, idempotencyKey);
 
     }
 
-    private String processAddMoney(AddMoneyRequest req){
+    private String processAddMoney(AddMoneyRequest req, String idempotencyKey){
 
         // 🔑 Generate txn id
         String txnId = IdGenerator.generateTxnId();
@@ -86,6 +109,9 @@ public class WalletServiceImpl implements WalletService {
             // ✅ Note: walletRepo.save() explicit call zaruri nahi hai @Transactional ke andar
             // Hibernate dirty checking automatically save karega — but explicit rakhna okay hai clarity ke liye
             walletRepo.save(wallet);
+
+            // ✅ Step 4: COMPLETED mark karo + TTL
+            idempotencyService.markAsCompleted(idempotencyKey, txnId);
 
             // 🧾 Save CREDIT transaction
             auditService.logTransaction(
@@ -107,6 +133,9 @@ public class WalletServiceImpl implements WalletService {
              * Main transaction rollback ho → wallet update cancel
              * Audit transaction commit ho → FAILED log save rehti hai ✅
              */
+
+            // ✅ Step 5: Fail hua — Redis se hata do, retry fresh karega
+            idempotencyService.deleteRecord(idempotencyKey);
 
             auditService.logTransaction(
                     txnId, null, req.getUserId(),
