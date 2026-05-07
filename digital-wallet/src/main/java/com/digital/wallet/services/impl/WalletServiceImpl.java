@@ -149,7 +149,7 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     @Transactional
-    public String sendMoney(SendMoneyRequest req) {
+    public String sendMoney(SendMoneyRequest req, String idempotencyKey) {
 
         log.info("sendMoney START senderId={} receiverId={} amount={} requestId={}",
                 req.getSenderId(), req.getReceiverId(), req.getAmount());
@@ -158,11 +158,36 @@ public class WalletServiceImpl implements WalletService {
             throw new WalletException("Sender and receiver cannot be same");
         }
 
-        return processSendMoney(req);
+        // ✅ Step 1: Cache check
+        IdempotencyRecord existing = idempotencyService.getRecord(idempotencyKey);
+
+        if(existing != null){
+            if ("COMPLETED".equals(existing.getStatus())) {
+                // Cache hit — wahi purana response return karo
+                log.info("[IDEMPOTENCY] Cache hit, returning stored response, key={}", idempotencyKey);
+                return existing.getTxnId();
+            }
+
+            if ("PROCESSING".equals(existing.getStatus())) {
+                // Duplicate concurrent request
+                throw new ConflictException("Request already in progress for key: " + idempotencyKey);
+            }
+        }
+
+        // ✅ Step 2: PROCESSING mark karo — lock lo
+        boolean lockAcquired = idempotencyService.markAsProcessing(idempotencyKey);
+
+        if(!lockAcquired){
+            // Koi aur thread pehle se processing kar raha hai
+            throw new ConflictException("Request already in progress for key: " + idempotencyKey);
+        }
+
+        // ✅ Step 3: Process New Transaction
+        return processSendMoney(req, idempotencyKey);
 
     }
 
-    private String processSendMoney(SendMoneyRequest req){
+    private String processSendMoney(SendMoneyRequest req, String idempotencyKey){
         log.info("sendMoney START senderId={} receiverId={} amount={}",
                 req.getSenderId(), req.getReceiverId(), req.getAmount());
 
@@ -225,6 +250,8 @@ public class WalletServiceImpl implements WalletService {
             walletRepo.save(sender);
             walletRepo.save(receiver);
 
+            // ✅ Step 4: COMPLETED mark karo + TTL
+            idempotencyService.markAsCompleted(idempotencyKey, referenceId);
 
             // 🧾 Debit log — sender ke liye
             auditService.logTransaction(
@@ -245,6 +272,9 @@ public class WalletServiceImpl implements WalletService {
             return referenceId;
         } catch (Exception e) {
             log.error("sendMoney FAILED sender={} receiver={} error={}", req.getSenderId(), req.getReceiverId(), e.getMessage());
+
+            // ✅ Step 5: Fail hua — Redis se hata do, retry fresh karega
+            idempotencyService.deleteRecord(idempotencyKey);
 
             // 🧾 FAILED log — REQUIRES_NEW se alag transaction mein save hoga
             auditService.logTransaction(

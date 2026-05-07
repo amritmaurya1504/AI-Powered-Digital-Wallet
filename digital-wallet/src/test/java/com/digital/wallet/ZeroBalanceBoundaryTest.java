@@ -99,7 +99,7 @@ class ZeroBalanceBoundaryTest {
                 req.setReceiverId(userB);
                 req.setAmount(new BigDecimal("500")); // poora balance
 
-                walletService.sendMoney(req);
+                walletService.sendMoney(req,"");
                 successCount.incrementAndGet();
                 System.out.println("✅ Thread 1: A → B ₹500 SUCCESS");
 
@@ -121,7 +121,7 @@ class ZeroBalanceBoundaryTest {
                 req.setReceiverId(userC);
                 req.setAmount(new BigDecimal("1")); // sirf ₹1
 
-                walletService.sendMoney(req);
+                walletService.sendMoney(req, "");
                 successCount.incrementAndGet();
                 System.out.println("✅ Thread 2: A → C ₹1 SUCCESS");
 

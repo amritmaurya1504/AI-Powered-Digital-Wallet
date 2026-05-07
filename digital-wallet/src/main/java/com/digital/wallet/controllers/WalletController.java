@@ -42,8 +42,10 @@ public class WalletController {
 
     // 💸 Send Money
     @PostMapping("/send-money")
-    public ResponseEntity<ApiResponse<String>> sendMoney(@RequestBody SendMoneyRequest req) {
-        String txnId = walletService.sendMoney(req);
+    public ResponseEntity<ApiResponse<String>> sendMoney(@RequestBody SendMoneyRequest req,
+                                                         @RequestHeader(value = "Idempotency-Key", required = false)
+                                                         String key) {
+        String txnId = walletService.sendMoney(req, key);
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "Money sent successfully", txnId)
         );

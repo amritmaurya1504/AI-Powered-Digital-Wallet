@@ -126,7 +126,7 @@ class FanInConcurrencyTest {
                     req.setReceiverId(receiver);
                     req.setAmount(sendAmount);
 
-                    walletService.sendMoney(req);
+                    walletService.sendMoney(req, "");
                     successCount.incrementAndGet();
                     System.out.println("✅ " + senderId + " → sent ₹200 to receiver");
 
@@ -213,7 +213,7 @@ class FanInConcurrencyTest {
                     req.setReceiverId(receiver);
                     req.setAmount(sendAmount);
 
-                    walletService.sendMoney(req);
+                    walletService.sendMoney(req, "");
                     successCount.incrementAndGet();
                     System.out.println("✅ " + senderId + " → sent ₹500");
 

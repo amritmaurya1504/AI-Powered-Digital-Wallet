@@ -102,7 +102,7 @@ class AdvancedConcurrencyTest {
                 req.setSenderId(userA);
                 req.setReceiverId(userB);
                 req.setAmount(new BigDecimal("300"));
-                walletService.sendMoney(req);
+                walletService.sendMoney(req, "");
                 successCount.incrementAndGet();
                 System.out.println("✅ A → B sent ₹300");
             } catch (Exception e) {
@@ -121,7 +121,7 @@ class AdvancedConcurrencyTest {
                 req.setSenderId(userB);
                 req.setReceiverId(userC);
                 req.setAmount(new BigDecimal("300"));
-                walletService.sendMoney(req);
+                walletService.sendMoney(req, "");
                 successCount.incrementAndGet();
                 System.out.println("✅ B → C sent ₹300");
             } catch (Exception e) {
@@ -140,7 +140,7 @@ class AdvancedConcurrencyTest {
                 req.setSenderId(userC);
                 req.setReceiverId(userA);
                 req.setAmount(new BigDecimal("300"));
-                walletService.sendMoney(req);
+                walletService.sendMoney(req, "");
                 successCount.incrementAndGet();
                 System.out.println("✅ C → A sent ₹300");
             } catch (Exception e) {
@@ -249,7 +249,7 @@ class AdvancedConcurrencyTest {
                 req.setSenderId(userA);
                 req.setReceiverId(userB);
                 req.setAmount(new BigDecimal("300"));
-                walletService.sendMoney(req);
+                walletService.sendMoney(req, "");
                 successCount.incrementAndGet();
                 totalDebited.addAndGet(300);
                 System.out.println("✅ A → B sent ₹300");
@@ -285,7 +285,7 @@ class AdvancedConcurrencyTest {
                 req.setSenderId(userA);
                 req.setReceiverId(userC);
                 req.setAmount(new BigDecimal("400"));
-                walletService.sendMoney(req);
+                walletService.sendMoney(req, "");
                 successCount.incrementAndGet();
                 totalDebited.addAndGet(400);
                 System.out.println("✅ A → C sent ₹400");
