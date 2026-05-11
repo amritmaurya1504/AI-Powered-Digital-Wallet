@@ -140,7 +140,7 @@ public class WalletServiceImpl implements WalletService {
             auditService.logTransaction(
                     txnId, null, req.getUserId(),
                     req.getAmount(), TransactionType.CREDIT,
-                   "Transaction Failed", TransactionStatus.FAILED
+                   "Added Money to wallet", TransactionStatus.FAILED
             );
 
             throw e;
@@ -280,7 +280,7 @@ public class WalletServiceImpl implements WalletService {
             auditService.logTransaction(
                     referenceId, req.getSenderId(), req.getReceiverId(),
                     req.getAmount(), TransactionType.DEBIT,
-                    "Transaction Failed", TransactionStatus.FAILED
+                    "Sent to user " + req.getReceiverId(), TransactionStatus.FAILED
             );
 
             throw e;

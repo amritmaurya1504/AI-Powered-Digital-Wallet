@@ -13,8 +13,10 @@ import java.util.List;
 public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepo txnRepo;
+    private final AiService aiService;
 
-    public TransactionServiceImpl(TransactionRepo txnRepo) {
+    public TransactionServiceImpl(TransactionRepo txnRepo, AiService aiService) {
+        this.aiService = aiService;
         this.txnRepo = txnRepo;
     }
 
@@ -29,6 +31,11 @@ public class TransactionServiceImpl implements TransactionService {
         txn.setType(type);
         txn.setStatus(status);
         txn.setNote(note);
+
+        // Auto categorize transaction based on note using LLM
+        String category = aiService.autoCategorization(note);
+        txn.setCategory(category);
+
 
         txnRepo.save(txn);
     }

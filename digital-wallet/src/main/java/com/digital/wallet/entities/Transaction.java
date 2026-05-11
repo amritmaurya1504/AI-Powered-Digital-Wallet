@@ -36,6 +36,8 @@ public class Transaction {
     private String status;
     private String note;
 
+    private String category;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 }
