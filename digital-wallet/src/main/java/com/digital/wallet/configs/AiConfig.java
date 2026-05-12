@@ -14,7 +14,7 @@ public class AiConfig {
         return builder
                 .defaultAdvisors(new SimpleLoggerAdvisor())
                 .defaultOptions(OpenAiChatOptions.builder()
-                        .model("gpt-4o-mini")
+                        .model("gpt-3.5-turbo")
                         .temperature(0.3)
                         .maxTokens(500)
                         .build())

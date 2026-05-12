@@ -1,8 +1,10 @@
 package com.digital.wallet.controllers;
 
 import com.digital.wallet.dtos.ApiResponse;
+import com.digital.wallet.dtos.MockTransactionRequest;
 import com.digital.wallet.entities.Transaction;
 import com.digital.wallet.services.TransactionService;
+import com.digital.wallet.utils.IdGenerator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +18,21 @@ public class TransactionController {
 
     public TransactionController(TransactionService txnService) {
         this.txnService = txnService;
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<String>> createMockTransactions(@RequestBody MockTransactionRequest mockTransactionRequest){
+        String txnId = IdGenerator.generateTxnId();
+        txnService.saveTransaction(txnId,
+                mockTransactionRequest.getSenderId(),
+                mockTransactionRequest.getReceiverId(),
+                mockTransactionRequest.getAmount(),
+                mockTransactionRequest.getType(),
+                mockTransactionRequest.getNote(),
+                mockTransactionRequest.getStatus());
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Transaction created successfully", txnId)
+        );
     }
 
     // 📜 Get all transactions for a user
