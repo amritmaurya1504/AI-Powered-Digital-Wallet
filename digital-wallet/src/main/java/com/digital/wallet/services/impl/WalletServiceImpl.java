@@ -158,6 +158,16 @@ public class WalletServiceImpl implements WalletService {
             throw new WalletException("Sender and receiver cannot be same");
         }
 
+        walletRepo.findByUserId(req.getSenderId()).orElseThrow(
+                () -> new ResourceNotFoundException("Sender Wallet not found!")
+        );
+
+        walletRepo.findByUserId(req.getReceiverId()).orElseThrow(
+                () -> new ResourceNotFoundException("Receiver Wallet not found!")
+        );
+
+
+
         // ✅ Step 1: Cache check
         IdempotencyRecord existing = idempotencyService.getRecord(idempotencyKey);
 

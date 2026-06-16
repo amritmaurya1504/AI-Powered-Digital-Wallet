@@ -31,11 +31,10 @@ public class TransactionServiceImpl implements TransactionService {
         txn.setType(type);
         txn.setStatus(status);
         txn.setNote(note);
-        txn.setCategory("Test Txn");
 
         // Auto categorize transaction based on note using LLM
-       /* String category = aiService.autoCategorization(note);
-        txn.setCategory(category);*/
+        String category = aiService.autoCategorization(note);
+        txn.setCategory(category);
 
 
         txnRepo.save(txn);
