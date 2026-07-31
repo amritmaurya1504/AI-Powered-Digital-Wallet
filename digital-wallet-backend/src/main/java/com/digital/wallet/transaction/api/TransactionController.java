@@ -5,6 +5,8 @@ import com.digital.wallet.common.util.IdGenerator;
 import com.digital.wallet.transaction.domain.Transaction;
 import com.digital.wallet.transaction.dto.MockTransactionRequest;
 import com.digital.wallet.transaction.service.TransactionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/transactions")
+@Tag(name = "Transactions", description = "Transaction creation and history")
 public class TransactionController {
 
     private final TransactionService txnService;
@@ -21,6 +24,7 @@ public class TransactionController {
     }
 
     @PostMapping
+    @Operation(summary = "Create a mock transaction record")
     public ResponseEntity<ApiResponse<String>> createMockTransactions(@RequestBody MockTransactionRequest mockTransactionRequest){
         String txnId = IdGenerator.generateTxnId();
         txnService.saveTransaction(txnId,
@@ -37,6 +41,7 @@ public class TransactionController {
 
     // 📜 Get all transactions for a user
     @GetMapping("/user/{userId}")
+    @Operation(summary = "Get a user's transaction history")
     public ResponseEntity<ApiResponse<List<Transaction>>> getUserTransactions(
             @PathVariable String userId) {
         List<Transaction> transactions = txnService.getUserTransactions(userId);
@@ -47,6 +52,7 @@ public class TransactionController {
 
     // 🔍 Get transaction by txnId
     @GetMapping("/{txnId}")
+    @Operation(summary = "Get a transaction by its ID")
     public ResponseEntity<ApiResponse<Transaction>> getTransactionByTxnId(
             @PathVariable String txnId) {
         Transaction txn = txnService.getTransactionByTxnId(txnId);

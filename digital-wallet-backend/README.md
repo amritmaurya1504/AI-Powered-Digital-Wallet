@@ -105,6 +105,11 @@ The server starts on `http://localhost:8080` by default.
 
 ## API reference
 
+Interactive Swagger documentation is available when the application is running:
+
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+
 All successful responses use this shape:
 
 ```json

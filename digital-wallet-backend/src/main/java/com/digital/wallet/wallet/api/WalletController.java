@@ -5,6 +5,9 @@ import com.digital.wallet.wallet.domain.Wallet;
 import com.digital.wallet.wallet.dto.AddMoneyRequest;
 import com.digital.wallet.wallet.dto.SendMoneyRequest;
 import com.digital.wallet.wallet.service.WalletService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +15,7 @@ import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/v1/wallet")
+@Tag(name = "Wallets", description = "Wallet creation, balances, funding, and transfers")
 public class WalletController {
 
     private final WalletService walletService;
@@ -22,6 +26,7 @@ public class WalletController {
 
     // 🆕 Create Wallet
     @PostMapping("/create")
+    @Operation(summary = "Create a wallet")
     public ResponseEntity<ApiResponse<Wallet>> createWallet(@RequestParam String userId) {
         Wallet wallet = walletService.createWallet(userId);
         return ResponseEntity.ok(
@@ -31,7 +36,9 @@ public class WalletController {
 
     // 💰 Add Money
     @PostMapping("/add-money")
+    @Operation(summary = "Add mock funds to a wallet", description = "Supply a unique Idempotency-Key for each logical payment.")
     public ResponseEntity<ApiResponse<String>> addMoney(@RequestBody AddMoneyRequest req,
+                                                        @Parameter(description = "Unique key used to safely retry the payment", required = true)
                                                         @RequestHeader(value = "Idempotency-Key", required = false)
                                                         String key) {
         String txnId = walletService.addMoney(req, key);
@@ -42,7 +49,9 @@ public class WalletController {
 
     // 💸 Send Money
     @PostMapping("/send-money")
+    @Operation(summary = "Transfer money between wallets", description = "Supply a unique Idempotency-Key for each logical transfer.")
     public ResponseEntity<ApiResponse<String>> sendMoney(@RequestBody SendMoneyRequest req,
+                                                         @Parameter(description = "Unique key used to safely retry the transfer", required = true)
                                                          @RequestHeader(value = "Idempotency-Key", required = false)
                                                          String key) {
         String txnId = walletService.sendMoney(req, key);
@@ -53,6 +62,7 @@ public class WalletController {
 
     // 💵 Get Balance
     @GetMapping("/balance/{userId}")
+    @Operation(summary = "Get a wallet balance")
     public ResponseEntity<ApiResponse<BigDecimal>> getBalance(@PathVariable String userId) {
         BigDecimal balance = walletService.getBalance(userId);
         return ResponseEntity.ok(
@@ -62,6 +72,7 @@ public class WalletController {
 
     // 🔍 Get Wallet
     @GetMapping("/{userId}")
+    @Operation(summary = "Get wallet details")
     public ResponseEntity<ApiResponse<Wallet>> getWallet(@PathVariable String userId) {
         Wallet wallet = walletService.getWalletByUserId(userId);
         return ResponseEntity.ok(
