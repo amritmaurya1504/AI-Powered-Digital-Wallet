@@ -1,0 +1,71 @@
+package com.digital.wallet.transaction.service.impl;
+
+import com.digital.wallet.ai.service.AiService;
+import com.digital.wallet.common.exception.ResourceNotFoundException;
+import com.digital.wallet.transaction.domain.Transaction;
+import com.digital.wallet.transaction.repository.TransactionRepository;
+import com.digital.wallet.transaction.service.TransactionService;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+@Service
+public class TransactionServiceImpl implements TransactionService {
+
+    private final TransactionRepository txnRepo;
+    private final AiService aiService;
+
+    public TransactionServiceImpl(TransactionRepository txnRepo, AiService aiService) {
+        this.aiService = aiService;
+        this.txnRepo = txnRepo;
+    }
+
+    @Override
+    public void saveTransaction(String txnId, String senderId, String receiverId, BigDecimal amount, String type,
+                                String note, String status) {
+        Transaction txn = new Transaction();
+        txn.setId(txnId);
+        txn.setSenderId(senderId);
+        txn.setReceiverId(receiverId);
+        txn.setAmount(amount);
+        txn.setType(type);
+        txn.setStatus(status);
+        txn.setNote(note);
+
+        //TODO: Auto categorize transaction based on note using LLM (Improve this synchronous call)
+        String category = aiService.autoCategorization(note);
+        txn.setCategory(category);
+
+
+        txnRepo.save(txn);
+    }
+
+    @Override
+    public List<Transaction> getUserTransactions(String userId) {
+        List<Transaction> transactions =
+                txnRepo.findBySenderIdOrReceiverId(userId, userId);
+
+        return transactions.stream()
+                .filter(txn -> {
+
+                    // 🔹 Case 1: User is sender → only DEBIT dikhao
+                    if (txn.getSenderId() != null && txn.getSenderId().equals(userId)) {
+                        return "DEBIT".equals(txn.getType());
+                    }
+
+                    // 🔹 Case 2: User is receiver → only CREDIT dikhao
+                    if (txn.getReceiverId() != null && txn.getReceiverId().equals(userId)) {
+                        return "CREDIT".equals(txn.getType());
+                    }
+
+                    return false;
+                })
+                .toList();
+    }
+
+    @Override
+    public Transaction getTransactionByTxnId(String txnId) {
+        return txnRepo.findById(txnId).orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+    }
+}

@@ -1,9 +1,9 @@
 package com.digital.wallet;
 
-import com.digital.wallet.dtos.AddMoneyRequest;
-import com.digital.wallet.services.impl.IdempotencyService;
-import com.digital.wallet.services.WalletService;
-import com.digital.wallet.utils.IdGenerator;
+import com.digital.wallet.common.idempotency.IdempotencyService;
+import com.digital.wallet.common.util.IdGenerator;
+import com.digital.wallet.wallet.dto.AddMoneyRequest;
+import com.digital.wallet.wallet.service.WalletService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,0 +1,249 @@
+Digital Wallet — Production Readiness Improvement Checklist
+===========================================================
+
+Work through this in priority order. Do not deploy real money movement
+until every STOP-SHIP item is complete and tested.
+
+
+STOP-SHIP: Payment correctness and security
+-------------------------------------------
+
+[ ] 1. Make idempotency durable in PostgreSQL
+
+Current problem:
+  Redis is the only idempotency source. A Redis restart/loss, or a process
+  crash after the database commits but before Redis is updated, can allow a
+  retry to process the same payment again.
+
+Required change:
+  - Create an idempotency table in PostgreSQL.
+  - Store: scoped idempotency key, request hash, status, transaction/reference
+    ID, stored response, created/updated timestamps.
+  - Add a unique constraint on (customer_id, operation, idempotency_key).
+  - Insert/read this record in the same database transaction as wallet and
+    ledger changes.
+  - Keep Redis only as an optional performance cache or short-lived lock.
+
+Tests:
+  - Retry after a simulated application crash immediately after DB commit.
+  - Retry after Redis is cleared/restarted.
+  - Two simultaneous requests with the same key.
+  - Same key with a different request payload; return 409 Conflict.
+
+
+[ ] 2. Do not mark idempotency COMPLETED before the DB commit
+
+Current problem:
+  WalletServiceImpl calls markAsCompleted(...) before its enclosing database
+  transaction commits. If a later DB failure rolls back, Redis can still say
+  COMPLETED and future retries return a false success.
+
+Required change:
+  - The durable database idempotency record is updated inside the transaction.
+  - Update any Redis cache only after commit using an AFTER_COMMIT event.
+  - Never regard Redis as proof that the payment completed.
+
+
+[ ] 3. Require a valid Idempotency-Key
+
+Current problem:
+  The HTTP header is optional. A missing value is used to build a Redis key,
+  so unrelated requests can collide under "idempotency:null".
+
+Required change:
+  - Make Idempotency-Key required in the controller.
+  - Reject blank/oversized keys.
+  - Scope the key by authenticated customer and operation.
+  - Bind each key to a request hash to reject accidental key reuse with
+    different transfer details.
+
+
+[ ] 4. Add authentication and authorization
+
+Current problem:
+  The client supplies user IDs directly. Anyone could transfer from another
+  user's wallet or call the add-money endpoint.
+
+Required change:
+  - Add Spring Security with authenticated identities.
+  - Derive sender/customer ID from the access token, not request JSON.
+  - Check the authenticated user owns the wallet.
+  - Remove the mock add-money and mock transaction endpoints from production,
+    or protect them with a restricted admin/test role.
+  - Add rate limiting to payment endpoints.
+
+
+[ ] 5. Keep successful financial records in the same DB transaction
+
+Current problem:
+  AuditService uses REQUIRES_NEW for all transaction records. A success audit
+  entry can commit even if the outer wallet transaction subsequently rolls
+  back, producing a false financial history.
+
+Required change:
+  - Persist successful wallet changes and immutable debit/credit ledger rows
+    in one PostgreSQL transaction.
+  - Use an independent transaction only for non-financial failure diagnostics.
+  - Clearly distinguish a financial ledger from operational audit logs.
+
+Tests:
+  - Force failure after ledger write and verify neither balance nor SUCCESS
+    ledger row exists.
+  - Force a failed payment and verify only the failure diagnostic exists.
+
+
+HIGH: Reliability and data integrity
+------------------------------------
+
+[ ] 6. Move AI categorization out of the payment path
+
+Current problem:
+  TransactionServiceImpl synchronously calls the OpenAI client before saving
+  the transaction. This holds wallet locks during a network call and makes an
+  OpenAI timeout/outage affect payment success and latency.
+
+Required change:
+  - Save the transaction with category PENDING in the financial transaction.
+  - Publish a transaction-created event.
+  - Process it after commit in a separate worker/transaction.
+  - Call OpenAI asynchronously, then update only the category.
+  - Log failures and retry safely; never roll back the payment for an AI error.
+  - Prefer a transactional outbox table over only @Async, because outbox work
+    survives process crashes between commit and event dispatch.
+
+
+[ ] 7. Introduce database migrations and production profiles
+
+Current problem:
+  spring.jpa.hibernate.ddl-auto=update allows uncontrolled schema changes.
+  Local database credentials and development settings are committed in the
+  default application.properties.
+
+Required change:
+  - Adopt Flyway or Liquibase migrations.
+  - In production use ddl-auto=validate (or none), never update/create.
+  - Use application-dev.properties and application-prod.properties.
+  - Inject secrets through a secret manager/environment, not source control.
+  - Do not use the default postgres/postgres credentials in production.
+
+
+[ ] 8. Enforce request and database validation
+
+Current problem:
+  DTO validation annotations exist but controllers do not use @Valid, so they
+  are not automatically applied. User IDs are only @NotNull in places, and
+  money scale/limits are not defined.
+
+Required change:
+  - Add @Valid to every @RequestBody.
+  - Use @NotBlank and sensible length limits for identifiers.
+  - Specify allowed currency precision and scale (for example DECIMAL(19,2)).
+  - Enforce non-null, type/status constraints, and indexes at the database.
+  - Reject negative, zero, excessively large, and invalid-scale amounts.
+
+
+[ ] 9. Make the financial ledger immutable
+
+Required change:
+  - Represent TransactionType and TransactionStatus as JPA enums, not free
+    strings.
+  - Make settled ledger fields non-null and non-updatable.
+  - Do not expose repository/entity mutation paths from public APIs.
+  - Keep corrections as compensating entries, not edits/deletes.
+  - Index sender_id, receiver_id, created_at, and reference/transaction IDs.
+
+
+[ ] 10. Configure timeouts and safe retries
+
+Required change:
+  - Configure PostgreSQL lock/query timeouts.
+  - Configure Redis connection/command timeouts.
+  - Configure OpenAI connect/read/overall timeouts and bounded retries.
+  - Handle database deadlock/serialization failures with limited exponential
+    backoff, only when durable idempotency makes the retry safe.
+  - Ensure async executor queues are bounded and monitored.
+
+
+MEDIUM: API, operations, and observability
+------------------------------------------
+
+[ ] 11. Improve error handling
+
+Required change:
+  - Do not return raw exception messages to API clients for 500 errors.
+  - Return stable error codes and a correlation/request ID.
+  - Log full exception stack traces internally with that correlation ID.
+  - Map known errors consistently: validation=400, authentication=401,
+    authorization=403, missing resource=404, duplicate/in-progress=409,
+    transient dependency failure=503.
+
+
+[ ] 12. Use DTOs at the HTTP boundary
+
+Required change:
+  - Return response DTOs rather than JPA Wallet and Transaction entities.
+  - Avoid exposing internal fields or allowing entity schema changes to change
+    the public API.
+  - Version API contracts deliberately.
+
+
+[ ] 13. Add operational visibility
+
+Required change:
+  - Add Spring Boot Actuator health/readiness/liveness endpoints.
+  - Publish metrics for payment success/failure, latency, lock waits, duplicate
+    requests, Redis failures, AI failures, and outbox backlog.
+  - Use structured logs with transaction/reference ID and correlation ID.
+  - Add tracing across HTTP, database, Redis, and async workers.
+  - Define alerts for failed payments, elevated latency, worker backlog, and
+    dependency health.
+
+
+[ ] 14. Strengthen deployment setup
+
+Required change:
+  - Use separate database/Redis credentials per environment.
+  - Enable TLS for public traffic and encrypted connections to dependencies.
+  - Define database backups, restore drills, and retention policy.
+  - Set container CPU/memory limits, health checks, and graceful shutdown.
+  - Add dependency/security scanning in CI.
+
+
+Test plan before production
+---------------------------
+
+[ ] Integration tests against PostgreSQL and Redis containers, not only mocks.
+[ ] Concurrent transfers involving the same sender and opposite directions.
+[ ] Concurrent duplicate requests using exactly the same idempotency key.
+[ ] Database deadlock, timeout, and rollback scenarios.
+[ ] Crash after database commit and before client response.
+[ ] Redis unavailable, restarted, or data lost.
+[ ] OpenAI slow, timing out, and unavailable; payment must still commit.
+[ ] Security tests: one user cannot transfer from or inspect another user.
+[ ] Load tests to measure lock waits and payment latency.
+[ ] Migration test from an empty database and a previous production schema.
+
+
+Target architecture
+-------------------
+
+HTTP request
+  -> authenticate and validate
+  -> one PostgreSQL transaction:
+       wallet balance updates
+       immutable ledger entries
+       durable idempotency record
+       outbox event
+  -> commit
+  -> update Redis cache / return response
+  -> outbox worker: AI categorization, notifications, analytics
+
+Recommended implementation order
+--------------------------------
+
+1. Durable idempotency and correct after-commit behavior.
+2. Put successful ledger records in the same transaction as balance changes.
+3. Authentication/authorization and remove production mock endpoints.
+4. Validation, migrations, and database constraints.
+5. Async outbox-based AI categorization.
+6. Timeouts, error handling, observability, and load/failure testing.

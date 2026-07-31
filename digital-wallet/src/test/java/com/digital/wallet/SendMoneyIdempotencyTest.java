@@ -1,13 +1,13 @@
 package com.digital.wallet;
 
-import com.digital.wallet.dtos.AddMoneyRequest;
-import com.digital.wallet.dtos.IdempotencyRecord;
-import com.digital.wallet.dtos.SendMoneyRequest;
-import com.digital.wallet.exceptions.InsufficientBalanceException;
-import com.digital.wallet.exceptions.WalletException;
-import com.digital.wallet.services.WalletService;
-import com.digital.wallet.services.impl.IdempotencyService;
-import com.digital.wallet.utils.IdGenerator;
+import com.digital.wallet.common.idempotency.IdempotencyRecord;
+import com.digital.wallet.common.idempotency.IdempotencyService;
+import com.digital.wallet.common.util.IdGenerator;
+import com.digital.wallet.wallet.dto.AddMoneyRequest;
+import com.digital.wallet.wallet.dto.SendMoneyRequest;
+import com.digital.wallet.wallet.exception.InsufficientBalanceException;
+import com.digital.wallet.wallet.exception.WalletException;
+import com.digital.wallet.wallet.service.WalletService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

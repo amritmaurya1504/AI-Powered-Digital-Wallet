@@ -1,7 +1,7 @@
 package com.digital.wallet;
 
-import com.digital.wallet.dtos.AddMoneyRequest;
-import com.digital.wallet.services.WalletService;
+import com.digital.wallet.wallet.dto.AddMoneyRequest;
+import com.digital.wallet.wallet.service.WalletService;
 import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
