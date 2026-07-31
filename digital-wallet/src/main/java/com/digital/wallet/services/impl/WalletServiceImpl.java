@@ -150,6 +150,8 @@ public class WalletServiceImpl implements WalletService {
     @Override
     @Transactional
     public String sendMoney(SendMoneyRequest req, String idempotencyKey) {
+        
+        //Todo: Also check balance is available or not
 
         log.info("sendMoney START senderId={} receiverId={} amount={} requestId={}",
                 req.getSenderId(), req.getReceiverId(), req.getAmount());
