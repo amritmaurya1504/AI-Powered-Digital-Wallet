@@ -15,6 +15,7 @@ A Spring Boot monolith for managing digital-wallet balances and peer-to-peer tra
 
 ## Technology
 
+
 | Area | Choice |
 | --- | --- |
 | Runtime | Java 21 |
