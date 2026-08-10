@@ -1,10 +1,9 @@
 package com.digital.wallet;
 
 import com.digital.wallet.common.util.IdGenerator;
-import com.digital.wallet.wallet.dto.AddMoneyRequest;
-import com.digital.wallet.wallet.dto.SendMoneyRequest;
+import com.digital.wallet.wallet.dto.AddMoneyDTO;
+import com.digital.wallet.wallet.dto.SendMoneyDTO;
 import com.digital.wallet.wallet.service.WalletService;
-import org.hibernate.validator.constraints.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -76,7 +75,7 @@ class FanInConcurrencyTest {
     // Helper method — balance add karna
     private void addBalance(String userId, String amount) {
         log.info("Add Balance Start");
-        AddMoneyRequest req = new AddMoneyRequest();
+        AddMoneyDTO req = new AddMoneyDTO();
         req.setUserId(userId);
         req.setAmount(new BigDecimal(amount));
         walletService.addMoney(req, IdGenerator.generateIdempotencyKey());
@@ -121,7 +120,7 @@ class FanInConcurrencyTest {
                 try {
                     startLatch.await(); // sab ruko
 
-                    SendMoneyRequest req = new SendMoneyRequest();
+                    SendMoneyDTO req = new SendMoneyDTO();
                     req.setSenderId(senderId);
                     req.setReceiverId(receiver);
                     req.setAmount(sendAmount);
@@ -208,7 +207,7 @@ class FanInConcurrencyTest {
                 try {
                     startLatch.await();
 
-                    SendMoneyRequest req = new SendMoneyRequest();
+                    SendMoneyDTO req = new SendMoneyDTO();
                     req.setSenderId(senderId);
                     req.setReceiverId(receiver);
                     req.setAmount(sendAmount);

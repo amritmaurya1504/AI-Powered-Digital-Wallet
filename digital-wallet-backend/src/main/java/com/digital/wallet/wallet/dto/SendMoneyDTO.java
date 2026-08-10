@@ -1,4 +1,4 @@
-package com.digital.wallet.transaction.dto;
+package com.digital.wallet.wallet.dto;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -11,9 +11,9 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class MockTransactionRequest {
+@NoArgsConstructor
+public class SendMoneyDTO {
     @NotNull(message = "Sender ID is required")
     private String senderId;
 
@@ -25,7 +25,4 @@ public class MockTransactionRequest {
     private BigDecimal amount;
 
     private String note;
-
-    private String type;
-    private String status;
 }

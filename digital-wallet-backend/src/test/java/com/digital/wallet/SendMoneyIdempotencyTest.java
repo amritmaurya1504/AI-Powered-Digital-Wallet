@@ -4,8 +4,8 @@ import com.digital.wallet.common.exception.ConflictException;
 import com.digital.wallet.wallet.idempotency.IdempotencyRecord;
 import com.digital.wallet.wallet.idempotency.IdempotencyService;
 import com.digital.wallet.common.util.IdGenerator;
-import com.digital.wallet.wallet.dto.AddMoneyRequest;
-import com.digital.wallet.wallet.dto.SendMoneyRequest;
+import com.digital.wallet.wallet.dto.AddMoneyDTO;
+import com.digital.wallet.wallet.dto.SendMoneyDTO;
 import com.digital.wallet.wallet.exception.InsufficientBalanceException;
 import com.digital.wallet.wallet.service.WalletService;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,14 +47,14 @@ class SendMoneyIdempotencyTest {
     }
 
     private void addBalance(String userId, String amount) {
-        AddMoneyRequest req = new AddMoneyRequest();
+        AddMoneyDTO req = new AddMoneyDTO();
         req.setUserId(userId);
         req.setAmount(new BigDecimal(amount));
         walletService.addMoney(req, IdGenerator.generateIdempotencyKey());
     }
 
-    private SendMoneyRequest buildSendRequest(String senderId, String receiverId, String amount) {
-        SendMoneyRequest req = new SendMoneyRequest();
+    private SendMoneyDTO buildSendRequest(String senderId, String receiverId, String amount) {
+        SendMoneyDTO req = new SendMoneyDTO();
         req.setSenderId(senderId);
         req.setReceiverId(receiverId);
         req.setAmount(new BigDecimal(amount));
@@ -81,7 +81,7 @@ class SendMoneyIdempotencyTest {
 
         addBalance(userA, "1000");
         String key = IdGenerator.generateIdempotencyKey();
-        SendMoneyRequest req = buildSendRequest(userA, userB, "500");
+        SendMoneyDTO req = buildSendRequest(userA, userB, "500");
 
         System.out.println("Before: A=₹1000, B=₹0");
 
@@ -126,7 +126,7 @@ class SendMoneyIdempotencyTest {
 
         addBalance(userA, "1000");
         String key = IdGenerator.generateIdempotencyKey();
-        SendMoneyRequest req = buildSendRequest(userA, userB, "500");
+        SendMoneyDTO req = buildSendRequest(userA, userB, "500");
 
         String firstTxnId = walletService.sendMoney(req, key);
         System.out.println("First call txnId: " + firstTxnId);
@@ -165,7 +165,7 @@ class SendMoneyIdempotencyTest {
 
         addBalance(userA, "100");
         String key = IdGenerator.generateIdempotencyKey();
-        SendMoneyRequest req = buildSendRequest(userA, userB, "500");
+        SendMoneyDTO req = buildSendRequest(userA, userB, "500");
 
         System.out.println("Before: A=₹100, B=₹0");
 
@@ -205,7 +205,7 @@ class SendMoneyIdempotencyTest {
 
         addBalance(userA, "1000");
         String key = IdGenerator.generateIdempotencyKey();
-        SendMoneyRequest req = buildSendRequest(userA, userA, "500");
+        SendMoneyDTO req = buildSendRequest(userA, userA, "500");
 
         assertThrows(
                 ConflictException.class,
@@ -235,7 +235,7 @@ class SendMoneyIdempotencyTest {
 
         addBalance(userA, "1000");
         String key = IdGenerator.generateIdempotencyKey();
-        SendMoneyRequest req = buildSendRequest(userA, userB, "500");
+        SendMoneyDTO req = buildSendRequest(userA, userB, "500");
 
         int threadCount = 2;
         CountDownLatch startLatch = new CountDownLatch(1);

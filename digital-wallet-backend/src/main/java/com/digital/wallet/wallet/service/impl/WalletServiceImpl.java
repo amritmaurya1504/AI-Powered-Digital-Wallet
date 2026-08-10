@@ -7,11 +7,10 @@ import com.digital.wallet.wallet.idempotency.IdempotencyService;
 import com.digital.wallet.common.util.IdGenerator;
 import com.digital.wallet.transaction.domain.TransactionStatus;
 import com.digital.wallet.transaction.domain.TransactionType;
-import com.digital.wallet.transaction.repository.TransactionRepository;
 import com.digital.wallet.transaction.service.impl.AuditService;
 import com.digital.wallet.wallet.domain.Wallet;
-import com.digital.wallet.wallet.dto.AddMoneyRequest;
-import com.digital.wallet.wallet.dto.SendMoneyRequest;
+import com.digital.wallet.wallet.dto.AddMoneyDTO;
+import com.digital.wallet.wallet.dto.SendMoneyDTO;
 import com.digital.wallet.wallet.exception.InsufficientBalanceException;
 import com.digital.wallet.wallet.repository.WalletRepository;
 import com.digital.wallet.wallet.service.WalletService;
@@ -58,7 +57,7 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     @Transactional // 🔥 Ensures atomic transaction (all DB ops succeed or rollback)
-    public String addMoney(AddMoneyRequest req, String idempotencyKey) {
+    public String addMoney(AddMoneyDTO req, String idempotencyKey) {
         log.info("addMoney START userId={} amount={} requestId={}", req.getUserId(), req.getAmount());
 
         // ✅ Step 1: Cache check
@@ -90,7 +89,7 @@ public class WalletServiceImpl implements WalletService {
 
     }
 
-    private String processAddMoney(AddMoneyRequest req, String idempotencyKey){
+    private String processAddMoney(AddMoneyDTO req, String idempotencyKey){
 
         // 🔑 Generate txn id
         String txnId = IdGenerator.generateTxnId();
@@ -147,7 +146,7 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     @Transactional
-    public String sendMoney(SendMoneyRequest req, String idempotencyKey) {
+    public String sendMoney(SendMoneyDTO req, String idempotencyKey) {
         
         //Todo: Also check balance is available or not
 
@@ -197,7 +196,7 @@ public class WalletServiceImpl implements WalletService {
 
     }
 
-    private String processSendMoney(SendMoneyRequest req, String idempotencyKey){
+    private String processSendMoney(SendMoneyDTO req, String idempotencyKey){
         log.info("sendMoney START senderId={} receiverId={} amount={}",
                 req.getSenderId(), req.getReceiverId(), req.getAmount());
 

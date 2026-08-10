@@ -3,7 +3,7 @@ package com.digital.wallet.transaction.api;
 import com.digital.wallet.common.api.ApiResponse;
 import com.digital.wallet.common.util.IdGenerator;
 import com.digital.wallet.transaction.domain.Transaction;
-import com.digital.wallet.transaction.dto.MockTransactionRequest;
+import com.digital.wallet.transaction.dto.MockTransactionDTO;
 import com.digital.wallet.transaction.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,15 +25,15 @@ public class TransactionController {
 
     @PostMapping
     @Operation(summary = "Create a mock transaction record")
-    public ResponseEntity<ApiResponse<String>> createMockTransactions(@RequestBody MockTransactionRequest mockTransactionRequest){
+    public ResponseEntity<ApiResponse<String>> createMockTransactions(@RequestBody MockTransactionDTO mockTransactionDTO){
         String txnId = IdGenerator.generateTxnId();
         txnService.saveTransaction(txnId,
-                mockTransactionRequest.getSenderId(),
-                mockTransactionRequest.getReceiverId(),
-                mockTransactionRequest.getAmount(),
-                mockTransactionRequest.getType(),
-                mockTransactionRequest.getNote(),
-                mockTransactionRequest.getStatus());
+                mockTransactionDTO.getSenderId(),
+                mockTransactionDTO.getReceiverId(),
+                mockTransactionDTO.getAmount(),
+                mockTransactionDTO.getType(),
+                mockTransactionDTO.getNote(),
+                mockTransactionDTO.getStatus());
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "Transaction created successfully", txnId)
         );

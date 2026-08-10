@@ -2,8 +2,8 @@ package com.digital.wallet.wallet.api;
 
 import com.digital.wallet.common.api.ApiResponse;
 import com.digital.wallet.wallet.domain.Wallet;
-import com.digital.wallet.wallet.dto.AddMoneyRequest;
-import com.digital.wallet.wallet.dto.SendMoneyRequest;
+import com.digital.wallet.wallet.dto.AddMoneyDTO;
+import com.digital.wallet.wallet.dto.SendMoneyDTO;
 import com.digital.wallet.wallet.service.WalletService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,7 +36,7 @@ public class WalletController {
 
     @PostMapping("/add-money")
     @Operation(summary = "Add mock funds to a wallet", description = "Supply a unique Idempotency-Key for each logical payment.")
-    public ResponseEntity<ApiResponse<String>> addMoney(@RequestBody AddMoneyRequest req,
+    public ResponseEntity<ApiResponse<String>> addMoney(@RequestBody AddMoneyDTO req,
                                                         @Parameter(description = "Unique key used to safely retry the payment", required = true)
                                                         @RequestHeader(value = "Idempotency-Key", required = false)
                                                         String key) {
@@ -48,7 +48,7 @@ public class WalletController {
 
     @PostMapping("/send-money")
     @Operation(summary = "Transfer money between wallets", description = "Supply a unique Idempotency-Key for each logical transfer.")
-    public ResponseEntity<ApiResponse<String>> sendMoney(@RequestBody SendMoneyRequest req,
+    public ResponseEntity<ApiResponse<String>> sendMoney(@RequestBody SendMoneyDTO req,
                                                          @Parameter(description = "Unique key used to safely retry the transfer", required = true)
                                                          @RequestHeader(value = "Idempotency-Key", required = false)
                                                          String key) {

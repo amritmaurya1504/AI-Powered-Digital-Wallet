@@ -1,7 +1,6 @@
 package com.digital.wallet.wallet.dto;
 
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,18 +11,14 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-public class SendMoneyRequest {
-    @NotNull(message = "Sender ID is required")
-    private String senderId;
-
-    @NotNull(message = "Receiver ID is required")
-    private String receiverId;
+@AllArgsConstructor
+public class AddMoneyDTO {
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "1.0", message = "Amount must be greater than 0")
     private BigDecimal amount;
 
-    private String note;
+    @NotNull(message = "User ID is required")
+    private String userId;
 }

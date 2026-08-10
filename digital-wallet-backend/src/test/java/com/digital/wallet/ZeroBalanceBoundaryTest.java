@@ -1,8 +1,8 @@
 package com.digital.wallet;
 
 import com.digital.wallet.common.util.IdGenerator;
-import com.digital.wallet.wallet.dto.AddMoneyRequest;
-import com.digital.wallet.wallet.dto.SendMoneyRequest;
+import com.digital.wallet.wallet.dto.AddMoneyDTO;
+import com.digital.wallet.wallet.dto.SendMoneyDTO;
 import com.digital.wallet.wallet.service.WalletService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ class ZeroBalanceBoundaryTest {
     }
 
     private void addBalance(String userId, String amount) {
-        AddMoneyRequest req = new AddMoneyRequest();
+        AddMoneyDTO req = new AddMoneyDTO();
         req.setUserId(userId);
         req.setAmount(new BigDecimal(amount));
         walletService.addMoney(req, IdGenerator.generateIdempotencyKey());
@@ -94,7 +94,7 @@ class ZeroBalanceBoundaryTest {
             try {
                 startLatch.await();
 
-                SendMoneyRequest req = new SendMoneyRequest();
+                SendMoneyDTO req = new SendMoneyDTO();
                 req.setSenderId(userA);
                 req.setReceiverId(userB);
                 req.setAmount(new BigDecimal("500")); // poora balance
@@ -116,7 +116,7 @@ class ZeroBalanceBoundaryTest {
             try {
                 startLatch.await();
 
-                SendMoneyRequest req = new SendMoneyRequest();
+                SendMoneyDTO req = new SendMoneyDTO();
                 req.setSenderId(userA);
                 req.setReceiverId(userC);
                 req.setAmount(new BigDecimal("1")); // sirf ₹1

@@ -2,7 +2,7 @@ package com.digital.wallet;
 
 import com.digital.wallet.wallet.idempotency.IdempotencyService;
 import com.digital.wallet.common.util.IdGenerator;
-import com.digital.wallet.wallet.dto.AddMoneyRequest;
+import com.digital.wallet.wallet.dto.AddMoneyDTO;
 import com.digital.wallet.wallet.service.WalletService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,8 +37,8 @@ class IdempotencyTest {
         walletService.createWallet(userId);
     }
 
-    private AddMoneyRequest buildRequest(String userId, String amount) {
-        AddMoneyRequest req = new AddMoneyRequest();
+    private AddMoneyDTO buildRequest(String userId, String amount) {
+        AddMoneyDTO req = new AddMoneyDTO();
         req.setUserId(userId);
         req.setAmount(new BigDecimal(amount));
         return req;
@@ -61,7 +61,7 @@ class IdempotencyTest {
         System.out.println("\n=== FRESH REQUEST TEST ===");
 
         String key = IdGenerator.generateIdempotencyKey();
-        AddMoneyRequest req = buildRequest(userId, "500");
+        AddMoneyDTO req = buildRequest(userId, "500");
 
         System.out.println("Before: balance=₹0, redis=empty");
 
@@ -101,7 +101,7 @@ class IdempotencyTest {
         System.out.println("\n=== RETRY TEST ===");
 
         String key = IdGenerator.generateIdempotencyKey();
-        AddMoneyRequest req = buildRequest(userId, "500");
+        AddMoneyDTO req = buildRequest(userId, "500");
 
         String firstTxnId = walletService.addMoney(req, key);
         System.out.println("First call txnId: " + firstTxnId);
@@ -139,7 +139,7 @@ class IdempotencyTest {
     void test_differentKeys_shouldProcessBothAndGivesDifferentTxnIds() {
         System.out.println("\n=== DIFFERENT KEYS TEST ===");
 
-        AddMoneyRequest req = buildRequest(userId, "500");
+        AddMoneyDTO req = buildRequest(userId, "500");
 
         String txnId1 = walletService.addMoney(req, IdGenerator.generateIdempotencyKey());
         String txnId2 = walletService.addMoney(req, IdGenerator.generateIdempotencyKey());
@@ -175,7 +175,7 @@ class IdempotencyTest {
         System.out.println("\n=== CONCURRENT SAME KEY TEST ===");
 
         String key = IdGenerator.generateIdempotencyKey();
-        AddMoneyRequest req = buildRequest(userId, "500");
+        AddMoneyDTO req = buildRequest(userId, "500");
 
         int threadCount = 2;
         CountDownLatch startLatch = new CountDownLatch(1);
