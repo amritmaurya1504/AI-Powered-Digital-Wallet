@@ -13,7 +13,6 @@ import com.digital.wallet.wallet.domain.Wallet;
 import com.digital.wallet.wallet.dto.AddMoneyRequest;
 import com.digital.wallet.wallet.dto.SendMoneyRequest;
 import com.digital.wallet.wallet.exception.InsufficientBalanceException;
-import com.digital.wallet.wallet.exception.WalletException;
 import com.digital.wallet.wallet.repository.WalletRepository;
 import com.digital.wallet.wallet.service.WalletService;
 import org.slf4j.Logger;
@@ -32,13 +31,10 @@ public class WalletServiceImpl implements WalletService {
     private final AuditService auditService;
     private final IdempotencyService idempotencyService;
     private final WalletRepository walletRepo;
-    private final TransactionRepository transactionRepo;
 
-    public WalletServiceImpl(WalletRepository walletRepo, AuditService auditService,
-                             TransactionRepository transactionRepo, IdempotencyService idempotencyService) {
+    public WalletServiceImpl(WalletRepository walletRepo, AuditService auditService, IdempotencyService idempotencyService) {
         this.walletRepo = walletRepo;
         this.auditService = auditService;
-        this.transactionRepo = transactionRepo;
         this.idempotencyService = idempotencyService;
     }
 
@@ -47,7 +43,7 @@ public class WalletServiceImpl implements WalletService {
         log.info("Creating wallet for userId={}", userId);
 
         walletRepo.findByUserId(userId).ifPresent(w -> {
-            throw new WalletException("Wallet already exists for user");
+            throw new ConflictException("Wallet already exists for user");
         });
 
         Wallet wallet = new Wallet();
@@ -55,6 +51,7 @@ public class WalletServiceImpl implements WalletService {
         wallet.setUserId(userId);
         wallet.setBalance(BigDecimal.ZERO);
         Wallet saved = walletRepo.save(wallet);
+
         log.info("Wallet created successfully walletId={} userId={}", saved.getId(), userId);
         return saved;
     }
@@ -158,7 +155,7 @@ public class WalletServiceImpl implements WalletService {
                 req.getSenderId(), req.getReceiverId(), req.getAmount());
 
         if (req.getSenderId().equals(req.getReceiverId())) {
-            throw new WalletException("Sender and receiver cannot be same");
+            throw new ConflictException("Sender and receiver cannot be same");
         }
 
         walletRepo.findByUserId(req.getSenderId()).orElseThrow(

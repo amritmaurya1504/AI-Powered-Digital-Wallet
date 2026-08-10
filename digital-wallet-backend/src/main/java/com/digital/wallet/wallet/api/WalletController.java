@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 
 @RestController
-@RequestMapping("/api/v1/wallet")
+@RequestMapping("/wallet")
 @Tag(name = "Wallets", description = "Wallet creation, balances, funding, and transfers")
 public class WalletController {
 
@@ -24,7 +24,7 @@ public class WalletController {
         this.walletService = walletService;
     }
 
-    // 🆕 Create Wallet
+    //Todo: After Auth module completed remove this
     @PostMapping("/create")
     @Operation(summary = "Create a wallet")
     public ResponseEntity<ApiResponse<Wallet>> createWallet(@RequestParam String userId) {
@@ -34,7 +34,6 @@ public class WalletController {
         );
     }
 
-    // 💰 Add Money
     @PostMapping("/add-money")
     @Operation(summary = "Add mock funds to a wallet", description = "Supply a unique Idempotency-Key for each logical payment.")
     public ResponseEntity<ApiResponse<String>> addMoney(@RequestBody AddMoneyRequest req,
@@ -47,7 +46,6 @@ public class WalletController {
         );
     }
 
-    // 💸 Send Money
     @PostMapping("/send-money")
     @Operation(summary = "Transfer money between wallets", description = "Supply a unique Idempotency-Key for each logical transfer.")
     public ResponseEntity<ApiResponse<String>> sendMoney(@RequestBody SendMoneyRequest req,
@@ -60,7 +58,6 @@ public class WalletController {
         );
     }
 
-    // 💵 Get Balance
     @GetMapping("/balance/{userId}")
     @Operation(summary = "Get a wallet balance")
     public ResponseEntity<ApiResponse<BigDecimal>> getBalance(@PathVariable String userId) {
@@ -70,7 +67,6 @@ public class WalletController {
         );
     }
 
-    // 🔍 Get Wallet
     @GetMapping("/{userId}")
     @Operation(summary = "Get wallet details")
     public ResponseEntity<ApiResponse<Wallet>> getWallet(@PathVariable String userId) {

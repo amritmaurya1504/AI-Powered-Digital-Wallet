@@ -1,12 +1,12 @@
 package com.digital.wallet;
 
+import com.digital.wallet.common.exception.ConflictException;
 import com.digital.wallet.wallet.idempotency.IdempotencyRecord;
 import com.digital.wallet.wallet.idempotency.IdempotencyService;
 import com.digital.wallet.common.util.IdGenerator;
 import com.digital.wallet.wallet.dto.AddMoneyRequest;
 import com.digital.wallet.wallet.dto.SendMoneyRequest;
 import com.digital.wallet.wallet.exception.InsufficientBalanceException;
-import com.digital.wallet.wallet.exception.WalletException;
 import com.digital.wallet.wallet.service.WalletService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -208,7 +208,7 @@ class SendMoneyIdempotencyTest {
         SendMoneyRequest req = buildSendRequest(userA, userA, "500");
 
         assertThrows(
-                WalletException.class,
+                ConflictException.class,
                 () -> walletService.sendMoney(req, key)
         );
 
