@@ -37,7 +37,7 @@ public class WalletController {
     @PostMapping("/add-money")
     @Operation(summary = "Add mock funds to a wallet", description = "Supply a unique Idempotency-Key for each logical payment.")
     public ResponseEntity<ApiResponse<String>> addMoney(@RequestBody AddMoneyDTO req,
-                                                        @Parameter(description = "Unique key used to safely retry the payment", required = true)
+                                                             @Parameter(description = "Unique key used to safely retry the payment", required = true)
                                                         @RequestHeader(value = "Idempotency-Key", required = false)
                                                         String key) {
         String txnId = walletService.addMoney(req, key);
@@ -49,7 +49,7 @@ public class WalletController {
     @PostMapping("/send-money")
     @Operation(summary = "Transfer money between wallets", description = "Supply a unique Idempotency-Key for each logical transfer.")
     public ResponseEntity<ApiResponse<String>> sendMoney(@RequestBody SendMoneyDTO req,
-                                                         @Parameter(description = "Unique key used to safely retry the transfer", required = true)
+                                                              @Parameter(description = "Unique key used to safely retry the transfer", required = true)
                                                          @RequestHeader(value = "Idempotency-Key", required = false)
                                                          String key) {
         String txnId = walletService.sendMoney(req, key);

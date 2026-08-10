@@ -1,5 +1,6 @@
 package com.digital.wallet.transaction.api;
 
+import com.digital.wallet.common.api.ApiErrorResponse;
 import com.digital.wallet.common.api.ApiResponse;
 import com.digital.wallet.common.util.IdGenerator;
 import com.digital.wallet.transaction.domain.Transaction;

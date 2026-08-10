@@ -34,8 +34,8 @@ public class TransactionServiceImpl implements TransactionService {
         txn.setNote(note);
 
         //TODO: Auto categorize transaction based on note using LLM (Improve this synchronous call)
-        String category = aiService.autoCategorization(note);
-        txn.setCategory(category);
+//        String category = aiService.autoCategorization(note);
+        txn.setCategory("OTHER");
 
 
         txnRepo.save(txn);
