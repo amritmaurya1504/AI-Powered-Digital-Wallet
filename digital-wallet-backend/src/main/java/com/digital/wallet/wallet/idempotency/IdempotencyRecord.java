@@ -1,4 +1,4 @@
-package com.digital.wallet.common.idempotency;
+package com.digital.wallet.wallet.idempotency;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

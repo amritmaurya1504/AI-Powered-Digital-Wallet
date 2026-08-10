@@ -1,4 +1,4 @@
-package com.digital.wallet.common.config;
+package com.digital.wallet.common.infrastructure.redis;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

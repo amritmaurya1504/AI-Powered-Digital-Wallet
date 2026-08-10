@@ -2,10 +2,9 @@ package com.digital.wallet.wallet.service.impl;
 
 import com.digital.wallet.common.exception.ConflictException;
 import com.digital.wallet.common.exception.ResourceNotFoundException;
-import com.digital.wallet.common.idempotency.IdempotencyRecord;
-import com.digital.wallet.common.idempotency.IdempotencyService;
+import com.digital.wallet.wallet.idempotency.IdempotencyRecord;
+import com.digital.wallet.wallet.idempotency.IdempotencyService;
 import com.digital.wallet.common.util.IdGenerator;
-import com.digital.wallet.transaction.domain.Transaction;
 import com.digital.wallet.transaction.domain.TransactionStatus;
 import com.digital.wallet.transaction.domain.TransactionType;
 import com.digital.wallet.transaction.repository.TransactionRepository;

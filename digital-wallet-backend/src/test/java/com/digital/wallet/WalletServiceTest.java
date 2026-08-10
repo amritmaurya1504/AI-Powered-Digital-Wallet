@@ -1,6 +1,6 @@
 package com.digital.wallet;
 
-import com.digital.wallet.common.idempotency.IdempotencyService;
+import com.digital.wallet.wallet.idempotency.IdempotencyService;
 import com.digital.wallet.common.util.IdGenerator;
 import com.digital.wallet.wallet.dto.AddMoneyRequest;
 import com.digital.wallet.wallet.service.WalletService;
