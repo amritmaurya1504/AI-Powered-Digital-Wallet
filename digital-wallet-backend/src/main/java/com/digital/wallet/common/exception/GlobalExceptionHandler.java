@@ -2,11 +2,16 @@ package com.digital.wallet.common.exception;
 
 import com.digital.wallet.common.api.ApiResponse;
 import com.digital.wallet.wallet.exception.InsufficientBalanceException;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -19,16 +24,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<?>> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex) {
 
-        String errorMsg = ex.getBindingResult()
+        Map<String, String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .findFirst()
-                .orElse("Validation error");
+                .collect(Collectors.toMap(FieldError::getField, DefaultMessageSourceResolvable::getDefaultMessage));
+
         return ResponseEntity.badRequest().body(
-                new ApiResponse<>(false, errorMsg, null)
+                errors
         );
     }
 
