@@ -1,8 +1,11 @@
 package com.digital.wallet.auth.service;
 
+import com.digital.wallet.auth.dto.LoginRequest;
+import com.digital.wallet.auth.dto.LoginResponse;
+import com.digital.wallet.auth.dto.SignupResponse;
 import com.digital.wallet.common.dto.CreateUserRequest;
-import com.digital.wallet.common.dto.UserResponse;
 
 public interface AuthService {
-    UserResponse signup(CreateUserRequest request);
+    SignupResponse signup(CreateUserRequest request);
+    LoginResponse login(LoginRequest request);
 }

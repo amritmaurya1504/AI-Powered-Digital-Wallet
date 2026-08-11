@@ -1,10 +1,10 @@
-package com.digital.wallet.common.dto;
+package com.digital.wallet.user.dto;
 
 import com.digital.wallet.user.domain.type.RoleType;
 import java.util.Set;
 
 public record UserResponse(
-        Long id,
+        String id,
         String email,
         String phone,
         Set<RoleType> roles

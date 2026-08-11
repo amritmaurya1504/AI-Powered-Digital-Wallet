@@ -4,6 +4,7 @@ import com.digital.wallet.common.api.ApiResponse;
 import com.digital.wallet.wallet.domain.Wallet;
 import com.digital.wallet.wallet.dto.AddMoneyDTO;
 import com.digital.wallet.wallet.dto.SendMoneyDTO;
+import com.digital.wallet.wallet.dto.WalletResponse;
 import com.digital.wallet.wallet.service.WalletService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,8 +28,8 @@ public class WalletController {
     //Todo: After Auth module completed remove this
     @PostMapping("/create")
     @Operation(summary = "Create a wallet")
-    public ResponseEntity<ApiResponse<Wallet>> createWallet(@RequestParam String userId) {
-        Wallet wallet = walletService.createWallet(userId);
+    public ResponseEntity<ApiResponse<WalletResponse>> createWallet(@RequestParam String userId) {
+        WalletResponse wallet = walletService.createWallet(userId);
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "Wallet created successfully", wallet)
         );

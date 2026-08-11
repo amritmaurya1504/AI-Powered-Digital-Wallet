@@ -2,9 +2,11 @@ package com.digital.wallet.wallet.service.impl;
 
 import com.digital.wallet.common.exception.ConflictException;
 import com.digital.wallet.common.exception.ResourceNotFoundException;
+import com.digital.wallet.wallet.domain.type.WalletStatus;
+import com.digital.wallet.wallet.dto.WalletResponse;
 import com.digital.wallet.wallet.idempotency.IdempotencyRecord;
 import com.digital.wallet.wallet.idempotency.IdempotencyService;
-import com.digital.wallet.common.util.IdGenerator;
+import com.digital.wallet.wallet.util.IdGenerator;
 import com.digital.wallet.transaction.domain.TransactionStatus;
 import com.digital.wallet.transaction.domain.TransactionType;
 import com.digital.wallet.transaction.service.impl.AuditService;
@@ -16,6 +18,7 @@ import com.digital.wallet.wallet.repository.WalletRepository;
 import com.digital.wallet.wallet.service.WalletService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,21 +41,30 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    public Wallet createWallet(String userId) {
-        log.info("Creating wallet for userId={}", userId);
+    public WalletResponse createWallet(String userId) {
 
-        walletRepo.findByUserId(userId).ifPresent(w -> {
+        log.info("WALLET_CREATION_STARTED userId={}", userId);
+
+        if (walletRepo.findByUserId(userId).isPresent()) {
+            log.warn("WALLET_CREATION_REJECTED reason=WALLET_ALREADY_EXISTS userId={}", userId);
             throw new ConflictException("Wallet already exists for user");
-        });
+        }
 
-        Wallet wallet = new Wallet();
-        wallet.setId(IdGenerator.generateWalletId());
-        wallet.setUserId(userId);
-        wallet.setBalance(BigDecimal.ZERO);
-        Wallet saved = walletRepo.save(wallet);
+        Wallet wallet = Wallet.builder()
+                        .id(IdGenerator.generateWalletId())
+                        .userId(userId)
+                        .balance(BigDecimal.ZERO)
+                        .status(WalletStatus.ACTIVE).build();
 
-        log.info("Wallet created successfully walletId={} userId={}", saved.getId(), userId);
-        return saved;
+        try {
+            Wallet savedWallet = walletRepo.save(wallet);
+            log.info("WALLET_CREATED walletId={} userId={}", savedWallet.getId(), userId);
+            return this.mapToWalletResponse(savedWallet);
+        }catch (DataIntegrityViolationException ex){
+            log.warn("WALLET_CREATION_REJECTED reason=UNIQUE_CONSTRAINT_VIOLATION userId={}", userId);
+            throw new ConflictException("Wallet already exists for user");
+        }
+
     }
 
     @Override
@@ -306,5 +318,14 @@ public class WalletServiceImpl implements WalletService {
     @Transactional(readOnly = true)
     public BigDecimal getBalance(String userId) {
         return walletRepo.findByUserId(userId).map(Wallet::getBalance).orElse(BigDecimal.ZERO);
+    }
+
+    private WalletResponse mapToWalletResponse(Wallet wallet){
+        return new WalletResponse(
+                wallet.getId(),
+                wallet.getUserId(),
+                wallet.getBalance(),
+                wallet.getStatus()
+        );
     }
 }

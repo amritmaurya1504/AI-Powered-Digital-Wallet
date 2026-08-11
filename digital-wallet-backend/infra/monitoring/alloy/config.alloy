@@ -9,6 +9,21 @@ local.file_match "wallet_logs" {
 
 loki.source.file "wallet_logs" {
   targets    = local.file_match.wallet_logs.targets
+  forward_to = [loki.process.wallet_logs.receiver]
+}
+
+loki.process "wallet_logs" {
+
+  stage.regex {
+    expression = `^\S+\s+\S+\s+(?P<level>TRACE|DEBUG|INFO|WARN|ERROR)`
+  }
+
+  stage.labels {
+    values = {
+      level = "level",
+    }
+  }
+
   forward_to = [loki.write.default.receiver]
 }
 

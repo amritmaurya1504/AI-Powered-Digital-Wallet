@@ -1,42 +1,40 @@
 package com.digital.wallet.wallet.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.digital.wallet.wallet.domain.type.WalletStatus;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(
-        name = "wallet",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_wallet_user_id",  // constraint ka naam — useful for error messages
-                columnNames = "user_id"
-        )
-)
+@Table(name = "wallet")
+@Builder
 public class Wallet {
 
     @Id
     private String id;
+
+    @Column(name = "user_id", nullable = false, unique = true)
     private String userId;
-    /* Because financial applications require high precision, and floating-point types
-    like double can cause rounding errors
-    Stores numbers exactly (no precision loss)
-    Uses decimal arithmetic (not binary)
-    Designed for:
-        Banking
-        Finance
-        Payments
-    */
-    private BigDecimal balance = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal balance;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private WalletStatus status;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
 }

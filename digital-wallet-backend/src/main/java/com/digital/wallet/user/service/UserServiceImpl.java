@@ -1,7 +1,7 @@
 package com.digital.wallet.user.service;
 
 import com.digital.wallet.common.dto.CreateUserRequest;
-import com.digital.wallet.common.dto.UserResponse;
+import com.digital.wallet.user.dto.UserResponse;
 import com.digital.wallet.common.exception.ConflictException;
 import com.digital.wallet.common.exception.ResourceNotFoundException;
 import com.digital.wallet.common.util.MaskingUtils;
@@ -12,6 +12,7 @@ import com.digital.wallet.user.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,14 +24,12 @@ import java.util.Set;
 @Service
 @AllArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService{
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Transactional
     public UserResponse createUser(CreateUserRequest request) {
 
         log.info(
@@ -98,7 +97,7 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public UserResponse getUserById(Long userId) {
+    public UserResponse getUserById(String userId) {
         log.info("FETCH_USER_STARTED userId={}", userId);
         User user = findUserById(userId);
         log.info("FETCH_USER_COMPLETED userId={}", userId);
@@ -107,7 +106,7 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional
-    public UserResponse updateUser(Long userId, UpdateUserRequest request) {
+    public UserResponse updateUser(String userId, UpdateUserRequest request) {
         log.info("USER_UPDATE_STARTED userId={}", userId);
         User user = findUserById(userId);
         boolean updated = false;
@@ -152,14 +151,21 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public void deleteUser(Long userId) {
+    public void deleteUser(String userId) {
         log.info("USER_DELETION_STARTED userId={}", userId);
         User user = findUserById(userId);
         userRepository.delete(user);
         log.info("USER_DELETED userId={}", userId);
     }
 
-    private User findUserById(Long userId) {
+    @Override
+    public User findUserByEmail(String emailId) {
+        return userRepository.findByEmailId(emailId).orElseThrow(() -> new UsernameNotFoundException(
+                "username not found with id: " + emailId
+        ));
+    }
+
+    private User findUserById(String userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.warn("USER_NOT_FOUND userId={}", userId);
@@ -175,4 +181,7 @@ public class UserServiceImpl implements UserService{
                 user.getRoles()
         );
     }
+
+
+
 }
