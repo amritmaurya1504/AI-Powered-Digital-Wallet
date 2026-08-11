@@ -22,13 +22,13 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        log.info("INCOMING_REQUEST: {}", request.getRequestURI());
         String correlationId = request.getHeader(HEADER);
         if (correlationId == null || correlationId.isBlank()) {
             correlationId = UUID.randomUUID().toString();
         }
         MDC.put("correlationId", correlationId);
         response.setHeader(HEADER, correlationId);
+        log.info("INCOMING_REQUEST: {}", request.getRequestURI());
         try {
             filterChain.doFilter(request, response);
         } finally {

@@ -39,7 +39,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         auth -> auth
-                                .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/auth/**", "/actuator/**").permitAll()
                                 .anyRequest().authenticated()
                 ).exceptionHandling(ex -> ex.accessDeniedHandler(
                         (request, response, accessDeniedException) ->
