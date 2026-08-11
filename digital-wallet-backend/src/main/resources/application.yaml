@@ -1,0 +1,4 @@
+spring:
+  jwt:
+    secret: temp-random-secret.temp-random-secret
+    expiration: 86400 # 1 Day
