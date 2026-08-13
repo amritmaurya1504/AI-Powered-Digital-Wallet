@@ -6,8 +6,7 @@ import com.digital.wallet.auth.dto.SignUpRequest;
 import com.digital.wallet.auth.dto.SignUpResponse;
 import com.digital.wallet.auth.exception.UserAlreadyExistsException;
 import com.digital.wallet.auth.service.AuthService;
-import com.digital.wallet.auth.service.JwtService;
-import com.digital.wallet.user.service.UserService;
+import com.digital.wallet.common.api.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,15 +22,15 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> login(@Valid @RequestBody LogInRequest credentials){
+    public ResponseEntity<ApiResponse<JwtResponse>> login(@Valid @RequestBody LogInRequest credentials) {
         JwtResponse response = authService.loginWithCredential(credentials.email(), credentials.password());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Logged In Successfully", response));
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<SignUpResponse> signup(@Valid @RequestBody SignUpRequest request) throws UserAlreadyExistsException {
+    public ResponseEntity<ApiResponse<SignUpResponse>> signup(@Valid @RequestBody SignUpRequest request) throws UserAlreadyExistsException {
         SignUpResponse response = authService.signup(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Signed Up Successfully", response));
     }
 
 }

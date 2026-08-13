@@ -6,12 +6,14 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class JwtService {
@@ -26,6 +28,8 @@ public class JwtService {
     }
 
     public String generateTokenWithPayload(String subject, Map<String, Object> payload) {
+        log.info("JWT_TOKEN Creation Initiated");
+
         return Jwts.builder()
                 .signWith(jwtConfig.getSecretKey())
                 .subject(subject)
@@ -37,14 +41,22 @@ public class JwtService {
 
     public boolean validateToken(String token) {
         try {
-            Claims claims = Jwts.parser()
+            Claims claims = getClaims(token);
+            return claims != null && claims.getExpiration().after(new Date());
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public Claims getClaims(String token) {
+        try {
+            return Jwts.parser()
                     .verifyWith(jwtConfig.getSecretKey())
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-            return claims.getExpiration().after(new Date());
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            return null;
         }
     }
 }
